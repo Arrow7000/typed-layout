@@ -13,3 +13,4 @@ build/
 # Misc temp files
 *.swp
 *.tmp
+/.lake
