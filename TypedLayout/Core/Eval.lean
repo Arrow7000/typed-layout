@@ -89,6 +89,10 @@ theorem evaluateAt_boxOrigin (layout : CheckedLayout) (origin : Origin) :
     (layout.evaluateAt origin).box.origin = origin := by
   cases layout <;> simp [evaluateAt]
 
+theorem evaluateAt_box (layout : CheckedLayout) (origin : Origin) :
+    (layout.evaluateAt origin).box = { origin := origin, extent := layout.extent } := by
+  cases layout <;> simp [evaluateAt, CheckedLayout.extent]
+
 theorem evaluateChildrenAlong_cons
     (axis : Axis)
     (origin : Origin)
