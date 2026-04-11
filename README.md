@@ -39,10 +39,13 @@ before any implementation starts.
 - `docs/research/text-strategy-and-pretext.md`
 - `docs/design/core-representation-sketch.md`
 - `docs/design/mvp-core-css-subset.md`
+- `docs/design/blessed-css-profile.md`
 - `docs/design/guarantee-classes.md`
 - `docs/design/canonical-example-layouts.md`
 - `docs/design/decision-gates.md`
 - `docs/plans/2026-04-11-research-roadmap.md`
+- `docs/plans/2026-04-11-phase-1-exact-1d-core-plan.md`
+- `docs/plans/2026-04-12-tranche-2-plan.md`
 
 ## Provisional stance
 
