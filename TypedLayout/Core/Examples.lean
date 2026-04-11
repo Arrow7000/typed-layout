@@ -1,4 +1,4 @@
-import TypedLayout.Core.Eval
+import TypedLayout.Core.Properties
 
 namespace TypedLayout.Core.Examples
 
@@ -123,6 +123,29 @@ theorem exactColumnChildYOrigins :
     (exactColumnCheckedLayout.evaluate.children.map (fun child => child.origin.y)) = [0, 25, 60] := by
   native_decide
 
+theorem exactColumnChildrenSeparated :
+    AdjacentSeparatedAlong .vertical { amount := 5 } exactColumnCheckedLayout.evaluate.children := by
+  simpa [CheckedLayout.evaluate, CheckedLayout.evaluateAt, exactColumnCheckedLayout] using
+    CheckedLayout.evaluateAt_column_childrenAdjacentSeparated
+      { amount := 5 }
+      [ .leaf { width := 30, height := 20 }
+      , .leaf { width := 40, height := 30 }
+      , .leaf { width := 35, height := 10 }
+      ]
+      Origin.zero
+
+def paddedLeafCheckedLayout : CheckedLayout :=
+  .padding { left := 2, top := 1, right := 3, bottom := 1 }
+    (.leaf { width := 10, height := 5 })
+
+theorem paddedLeafChildFitsWithin :
+    ImmediateChildrenFitWithin paddedLeafCheckedLayout.evaluate := by
+  simpa [CheckedLayout.evaluate, paddedLeafCheckedLayout] using
+    CheckedLayout.evaluateAt_padding_immediateChildrenFitWithin
+      { left := 2, top := 1, right := 3, bottom := 1 }
+      (.leaf { width := 10, height := 5 })
+      Origin.zero
+
 def paddedUnderflowLayout : Layout :=
   .padding { left := 3, top := 1, right := 3, bottom := 1 }
     (.leaf { width := 1, height := 1 })
@@ -155,5 +178,18 @@ theorem framedLeafGeometry :
             } ]
       } := by
   simp [framedLeafCheckedLayout, CheckedLayout.evaluate, CheckedLayout.evaluateAt, Origin.zero]
+
+theorem framedLeafChildFitsWithin :
+    ImmediateChildrenFitWithin framedLeafCheckedLayout.evaluate := by
+  have rawFits : ({ width := 100, height := 50 } : ExactExtent).fitsWithin ({ width := 120, height := 60 } : ExactExtent) := by
+    native_decide
+  have fits : (CheckedLayout.leaf { width := 100, height := 50 }).extent.fitsWithin ({ width := 120, height := 60 } : ExactExtent) := by
+    simpa [CheckedLayout.extent] using rawFits
+  simpa [CheckedLayout.evaluate, framedLeafCheckedLayout] using
+    CheckedLayout.evaluateAt_frame_immediateChildrenFitWithin
+      ({ width := 120, height := 60 } : ExactExtent)
+      (.leaf { width := 100, height := 50 })
+      Origin.zero
+      fits
 
 end TypedLayout.Core.Examples
