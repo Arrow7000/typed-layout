@@ -27,6 +27,38 @@ structure Box where
   extent : ExactExtent
   deriving DecidableEq, Repr
 
+namespace Box
+
+def right (box : Box) : Nat :=
+  box.origin.x + box.extent.width
+
+def bottom (box : Box) : Nat :=
+  box.origin.y + box.extent.height
+
+def fitsWithin (inner outer : Box) : Prop :=
+  outer.origin.x ≤ inner.origin.x ∧
+    outer.origin.y ≤ inner.origin.y ∧
+    inner.right ≤ outer.right ∧
+    inner.bottom ≤ outer.bottom
+
+instance instDecidableFitsWithin (inner outer : Box) : Decidable (inner.fitsWithin outer) := by
+  unfold Box.fitsWithin
+  infer_instance
+
+def separatedByAtLeastAlong (axis : Axis) (gap : Nat) (earlier later : Box) : Prop :=
+  match axis with
+  | .horizontal => earlier.right + gap ≤ later.origin.x
+  | .vertical => earlier.bottom + gap ≤ later.origin.y
+
+instance instDecidableSeparatedByAtLeastAlong
+    (axis : Axis)
+    (gap : Nat)
+    (earlier later : Box) :
+    Decidable (earlier.separatedByAtLeastAlong axis gap later) := by
+  cases axis <;> unfold Box.separatedByAtLeastAlong <;> infer_instance
+
+end Box
+
 namespace Insets
 
 def horizontal (insets : Insets) : Nat :=

@@ -22,23 +22,9 @@ def kind : CheckedLayout → LayoutKind
 def extent : CheckedLayout → ExactExtent
   | .leaf extent => extent
   | .row gap children =>
-      let width :=
-        match children with
-        | [] => 0
-        | child :: rest =>
-            rest.foldl (fun total next => total + gap.amount + next.extent.width) child.extent.width
-      let height :=
-        children.foldl (fun total child => Nat.max total child.extent.height) 0
-      { width := width, height := height }
+      ExactExtent.stack .horizontal gap (children.map CheckedLayout.extent)
   | .column gap children =>
-      let width :=
-        children.foldl (fun total child => Nat.max total child.extent.width) 0
-      let height :=
-        match children with
-        | [] => 0
-        | child :: rest =>
-            rest.foldl (fun total next => total + gap.amount + next.extent.height) child.extent.height
-      { width := width, height := height }
+      ExactExtent.stack .vertical gap (children.map CheckedLayout.extent)
   | .padding insets child =>
       child.extent.expand insets
   | .frame extent _ =>
@@ -52,30 +38,44 @@ def crossExtent (layout : CheckedLayout) (axis : Axis) : Nat :=
 
 end CheckedLayout
 
+structure CheckedWithin (available : AvailableSpace) where
+  layout : CheckedLayout
+  fits : layout.extent.fitsWithin available.extent
+
+namespace CheckedWithin
+
+def extent {available : AvailableSpace} (checked : CheckedWithin available) : ExactExtent :=
+  checked.layout.extent
+
+def childLayouts {available : AvailableSpace} (children : List (CheckedWithin available)) : List CheckedLayout :=
+  children.map CheckedWithin.layout
+
+end CheckedWithin
+
 mutual
 
-def checkWithin (available : AvailableSpace) : Layout → CheckResult CheckedLayout
+def checkWithin (available : AvailableSpace) : Layout → CheckResult (CheckedWithin available)
   | .leaf extent =>
-      if extent.fitsWithin available.extent then
-        .exact (.leaf extent)
+      if fits : extent.fitsWithin available.extent then
+        .exact { layout := .leaf extent, fits := by simpa [CheckedLayout.extent] using fits }
       else
         .incompatible (.doesNotFit .leaf available.extent extent)
   | .row gap children =>
       match checkChildrenWithin available children with
       | .incompatible error => .incompatible error
       | .exact checkedChildren =>
-          let checked : CheckedLayout := .row gap checkedChildren
-          if checked.extent.fitsWithin available.extent then
-            .exact checked
+          let checked : CheckedLayout := .row gap (CheckedWithin.childLayouts checkedChildren)
+          if fits : checked.extent.fitsWithin available.extent then
+            .exact { layout := checked, fits := fits }
           else
             .incompatible (.doesNotFit .row available.extent checked.extent)
   | .column gap children =>
       match checkChildrenWithin available children with
       | .incompatible error => .incompatible error
       | .exact checkedChildren =>
-          let checked : CheckedLayout := .column gap checkedChildren
-          if checked.extent.fitsWithin available.extent then
-            .exact checked
+          let checked : CheckedLayout := .column gap (CheckedWithin.childLayouts checkedChildren)
+          if fits : checked.extent.fitsWithin available.extent then
+            .exact { layout := checked, fits := fits }
           else
             .incompatible (.doesNotFit .column available.extent checked.extent)
   | .padding insets child =>
@@ -85,16 +85,20 @@ def checkWithin (available : AvailableSpace) : Layout → CheckResult CheckedLay
           match checkWithin { extent := innerExtent } child with
           | .incompatible error => .incompatible error
           | .exact checkedChild =>
-              let checked : CheckedLayout := .padding insets checkedChild
-              if checked.extent.fitsWithin available.extent then
-                .exact checked
+              let checked : CheckedLayout := .padding insets checkedChild.layout
+              if fits : checked.extent.fitsWithin available.extent then
+                .exact { layout := checked, fits := fits }
               else
                 .incompatible (.doesNotFit .padding available.extent checked.extent)
   | .frame extent child =>
-      if extent.fitsWithin available.extent then
+      if frameFits : extent.fitsWithin available.extent then
         match checkWithin { extent := extent } child with
         | .incompatible error => .incompatible error
-        | .exact checkedChild => .exact (.frame extent checkedChild)
+        | .exact checkedChild =>
+            .exact
+              { layout := .frame extent checkedChild.layout
+              , fits := by simpa [CheckedLayout.extent] using frameFits
+              }
       else
         .incompatible (.doesNotFit .frame available.extent extent)
 
@@ -105,7 +109,7 @@ decreasing_by
   all_goals simp_wf
   all_goals omega
 
-def checkChildrenWithin (available : AvailableSpace) : List Layout → CheckResult (List CheckedLayout)
+def checkChildrenWithin (available : AvailableSpace) : List Layout → CheckResult (List (CheckedWithin available))
   | [] => .exact []
   | child :: rest =>
       match checkWithin available child with
@@ -124,7 +128,7 @@ decreasing_by
 
 end
 
-def check (available : AvailableSpace) (layout : Layout) : CheckResult CheckedLayout :=
+def check (available : AvailableSpace) (layout : Layout) : CheckResult (CheckedWithin available) :=
   checkWithin available layout
 
 end TypedLayout.Core
