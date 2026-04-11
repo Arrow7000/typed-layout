@@ -1,3 +1,6 @@
--- This module serves as the root of the `TypedLayout` library.
--- Import modules here that should be built as part of the library.
-import TypedLayout.Basic
+import TypedLayout.Core.Geometry
+import TypedLayout.Core.Domain
+import TypedLayout.Core.Ast
+import TypedLayout.Core.Check
+import TypedLayout.Core.Eval
+import TypedLayout.Core.Examples
