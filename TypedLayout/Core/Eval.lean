@@ -7,6 +7,57 @@ structure GeometryTree where
   children : List GeometryTree
   deriving Repr
 
+mutual
+
+private def decEqGeometryTree : (left right : GeometryTree) → Decidable (left = right)
+  | ⟨leftBox, leftChildren⟩, ⟨rightBox, rightChildren⟩ =>
+      match decEq leftBox rightBox with
+      | isFalse hBox =>
+          isFalse (by
+            intro h
+            injection h with hBox'
+            exact hBox hBox')
+      | isTrue hBox =>
+          match decEqGeometryTreeList leftChildren rightChildren with
+          | isFalse hChildren =>
+              isFalse (by
+                intro h
+                injection h with _ hChildren'
+                exact hChildren hChildren')
+          | isTrue hChildren =>
+              isTrue (by
+                cases hBox
+                cases hChildren
+                rfl)
+
+private def decEqGeometryTreeList : (left right : List GeometryTree) → Decidable (left = right)
+  | [], [] => isTrue rfl
+  | [], _ :: _ => isFalse (by intro h; cases h)
+  | _ :: _, [] => isFalse (by intro h; cases h)
+  | leftHead :: leftTail, rightHead :: rightTail =>
+      match decEqGeometryTree leftHead rightHead with
+      | isFalse hHead =>
+          isFalse (by
+            intro h
+            injection h with hHead'
+            exact hHead hHead')
+      | isTrue hHead =>
+          match decEqGeometryTreeList leftTail rightTail with
+          | isFalse hTail =>
+              isFalse (by
+                intro h
+                injection h with _ hTail'
+                exact hTail hTail')
+          | isTrue hTail =>
+              isTrue (by
+                cases hHead
+                cases hTail
+                rfl)
+
+end
+
+instance : DecidableEq GeometryTree := decEqGeometryTree
+
 namespace GeometryTree
 
 def origin (tree : GeometryTree) : Origin :=

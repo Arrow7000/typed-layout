@@ -20,6 +20,7 @@ The implemented exact fragment currently includes:
 
 - exact extents over `Nat`
 - recursive exact stacking combinators (`stackedMain`, `stackedCross`, `stack`)
+- manual `DecidableEq` support for geometry trees
 - origins and insets
 - leaves
 - rows
@@ -39,6 +40,7 @@ The current Lean development already contains proofs/examples for:
 - exact row child x-origins
 - exact column child y-origins
 - nested frame/padding/row geometry examples
+- full concrete geometry equality for nested exact layouts
 - generic row adjacency/separation
 - generic column adjacency/separation
 - generic padding child containment

@@ -210,6 +210,26 @@ theorem nestedFrameRowLeafOrigins :
       [[[ { x := 10, y := 5 }, { x := 78, y := 5 } ]]] := by
   native_decide
 
+theorem nestedFrameRowFullGeometry :
+    nestedFrameRowCheckedLayout.evaluate =
+      { box := { origin := Origin.zero, extent := { width := 200, height := 80 } }
+      , children :=
+          [ { box := { origin := Origin.zero, extent := { width := 128, height := 40 } }
+            , children :=
+                [ { box := { origin := { x := 10, y := 5 }, extent := { width := 108, height := 30 } }
+                  , children :=
+                      [ { box := { origin := { x := 10, y := 5 }, extent := { width := 60, height := 20 } }
+                        , children := []
+                        }
+                      , { box := { origin := { x := 78, y := 5 }, extent := { width := 40, height := 30 } }
+                        , children := []
+                        }
+                      ]
+                  } ]
+            } ]
+      } := by
+  native_decide
+
 theorem nestedFrameRowPaddingChildFits :
     ImmediateChildrenFitWithin nestedFrameRowCheckedLayout.evaluate := by
   have fits :
