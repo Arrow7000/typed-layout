@@ -19,6 +19,7 @@ This note records what the current Lean core actually covers right now.
 The implemented exact fragment currently includes:
 
 - exact extents over `Nat`
+- recursive exact stacking combinators (`stackedMain`, `stackedCross`, `stack`)
 - origins and insets
 - leaves
 - rows
@@ -37,11 +38,20 @@ The current Lean development already contains proofs/examples for:
 - exact column extent computation
 - exact row child x-origins
 - exact column child y-origins
-- row adjacency/separation
-- column adjacency/separation
-- padding child containment
-- framed-leaf child containment when a fit proof is supplied
+- nested frame/padding/row geometry examples
+- generic row adjacency/separation
+- generic column adjacency/separation
+- generic padding child containment
+- generic framed-leaf child containment when a fit proof is supplied
+- concrete row child containment checks via `immediateChildrenFitWithin?`
+- concrete column child containment checks via `immediateChildrenFitWithin?`
 - incompatible layouts surfacing the expected checker error shape
+
+The checker/result layer also now exposes small boolean projections that are handy
+for executable examples:
+
+- `CheckResult.isExact`
+- `CheckResult.hasError`
 
 ## Current semantic stance of the code
 
@@ -58,11 +68,16 @@ Important boundaries of the current implementation:
    Origin and extent travel together as a `Box` rather than as loosely related
    fields.
 
+4. **The local proof story is currently asymmetric.**
+   Wrapper containment is proved generically today; stacked-layout containment is
+   currently represented by concrete executable examples plus generic separation
+   lemmas.
+
 ## What is still missing before CSS work
 
 Before any serious CSS lowering, the next desirable semantic work is still:
 
-- stronger containment properties for stacking layouts
+- generic containment properties for stacking layouts
 - clearer alignment between exact guarantees and future `conditional(profile)`
   guarantees
 - a crisper backend mapping note for row/column/padding/frame

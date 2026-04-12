@@ -53,17 +53,27 @@ def error? : CheckResult α → Option CheckError
   | .exact _ => none
   | .incompatible error => some error
 
+def isExact : CheckResult α → Bool
+  | .exact _ => true
+  | .incompatible _ => false
+
+def hasError (expected : CheckError) : CheckResult α → Bool
+  | .exact _ => false
+  | .incompatible error => decide (error = expected)
+
 end CheckResult
 
 namespace ExactExtent
 
 def stackedMain (axis : Axis) (gap : Gap) : List ExactExtent → Nat
   | [] => 0
-  | child :: rest =>
-      rest.foldl (fun total next => total + gap.amount + next.main axis) (child.main axis)
+  | [child] => child.main axis
+  | child :: next :: rest => child.main axis + gap.amount + stackedMain axis gap (next :: rest)
 
 def stackedCross (axis : Axis) (children : List ExactExtent) : Nat :=
-  children.foldl (fun total child => Nat.max total (child.cross axis)) 0
+  match children with
+  | [] => 0
+  | child :: rest => Nat.max (child.cross axis) (stackedCross axis rest)
 
 def stack (axis : Axis) (gap : Gap) (children : List ExactExtent) : ExactExtent :=
   ExactExtent.ofAxis axis (stackedMain axis gap children) (stackedCross axis children)
@@ -74,7 +84,39 @@ theorem stack_nil (axis : Axis) (gap : Gap) :
 
 theorem stack_single (axis : Axis) (gap : Gap) (child : ExactExtent) :
     stack axis gap [child] = child := by
-  cases axis <;> rfl
+  cases axis <;> simp [stack, stackedMain, stackedCross, ExactExtent.ofAxis, ExactExtent.main, ExactExtent.cross]
+
+theorem stackedMain_cons_cons (axis : Axis) (gap : Gap) (child next : ExactExtent) (rest : List ExactExtent) :
+    stackedMain axis gap (child :: next :: rest) =
+      child.main axis + gap.amount + stackedMain axis gap (next :: rest) := by
+  rfl
+
+theorem stackedCross_cons (axis : Axis) (child : ExactExtent) (rest : List ExactExtent) :
+    stackedCross axis (child :: rest) = Nat.max (child.cross axis) (stackedCross axis rest) := by
+  rfl
+
+theorem stackedCross_tail_le_cons (axis : Axis) (child : ExactExtent) (rest : List ExactExtent) :
+    stackedCross axis rest ≤ stackedCross axis (child :: rest) := by
+  simpa [stackedCross_cons] using (Nat.le_max_right (child.cross axis) (stackedCross axis rest))
+
+theorem cross_le_stackedCross_of_mem
+    (axis : Axis)
+    (target : ExactExtent)
+    (children : List ExactExtent)
+    (h : target ∈ children) :
+    target.cross axis ≤ stackedCross axis children := by
+  induction children with
+  | nil =>
+      cases h
+  | cons child rest ih =>
+      simp only [List.mem_cons] at h
+      simp [stackedCross_cons]
+      cases h with
+      | inl targetEq =>
+          subst target
+          exact Nat.le_max_left _ _
+      | inr targetMem =>
+          exact Nat.le_trans (ih targetMem) (Nat.le_max_right _ _)
 
 end ExactExtent
 

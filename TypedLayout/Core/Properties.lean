@@ -11,6 +11,15 @@ theorem fitsWithin_refl (box : Box) : box.fitsWithin box := by
   unfold Box.fitsWithin Box.right Box.bottom
   omega
 
+theorem fitsWithin_trans {inner middle outer : Box}
+    (h₁ : inner.fitsWithin middle)
+    (h₂ : middle.fitsWithin outer) :
+    inner.fitsWithin outer := by
+  rcases h₁ with ⟨left₁, top₁, right₁, bottom₁⟩
+  rcases h₂ with ⟨left₂, top₂, right₂, bottom₂⟩
+  exact ⟨Nat.le_trans left₂ left₁, Nat.le_trans top₂ top₁,
+    Nat.le_trans right₁ right₂, Nat.le_trans bottom₁ bottom₂⟩
+
 theorem sameOriginFitsWithin_of_extentFits
     (origin : Origin)
     {inner outer : ExactExtent}
@@ -33,6 +42,9 @@ theorem translatedInsetFitsWithinExpanded
 end Box
 
 namespace GeometryTree
+
+def immediateChildrenFitWithin? (tree : GeometryTree) : Bool :=
+  tree.children.all (fun child => decide (child.box.fitsWithin tree.box))
 
 theorem immediateChildrenFitWithin_leaf (extent : ExactExtent) (origin : Origin) :
     ImmediateChildrenFitWithin

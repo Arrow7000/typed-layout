@@ -40,22 +40,8 @@ theorem exactRowExtent :
   simpa [exactRowCheckedLayout, CheckedLayout.extent] using exactRowComputedExtent
 
 theorem exactRowCheckGuarantee :
-    (check exactRowAvailable exactRowLayout).guaranteeClass = .exact := by
-  let computedExtent : ExactExtent :=
-    ExactExtent.ofAxis Axis.horizontal
-      (({ width := 100, height := 20 } : ExactExtent).main Axis.horizontal + 10 +
-        ({ width := 150, height := 30 } : ExactExtent).main Axis.horizontal + 10 +
-        ({ width := 200, height := 25 } : ExactExtent).main Axis.horizontal)
-      (max (({ width := 100, height := 20 } : ExactExtent).cross Axis.horizontal)
-        (max (({ width := 150, height := 30 } : ExactExtent).cross Axis.horizontal)
-          (({ width := 200, height := 25 } : ExactExtent).cross Axis.horizontal)))
-  have fits : computedExtent.fitsWithin exactRowAvailable.extent := by
-    simpa [exactRowExpectedExtent, exactRowComputedExtent] using exactRowExpectedFits
-  have fits' : computedExtent.width ≤ 500 ∧ computedExtent.height ≤ 40 := by
-    simpa [ExactExtent.fitsWithin] using fits
-  simp [CheckResult.guaranteeClass, check, checkWithin, checkChildrenWithin, exactRowAvailable,
-    exactRowLayout, CheckedWithin.childLayouts, CheckedLayout.extent, ExactExtent.stack,
-    ExactExtent.stackedMain, ExactExtent.stackedCross, ExactExtent.fitsWithin, computedExtent, fits']
+    (check exactRowAvailable exactRowLayout).isExact = true := by
+  native_decide
 
 theorem exactRowChildXOrigins :
     (exactRowCheckedLayout.evaluate.children.map (fun child => child.origin.x)) = [0, 110, 270] := by
@@ -70,6 +56,10 @@ theorem exactRowChildrenSeparated :
       , .leaf { width := 150, height := 30 }
       , .leaf { width := 200, height := 25 }
       ]
+
+theorem exactRowChildrenFitWithin :
+    exactRowCheckedLayout.evaluate.immediateChildrenFitWithin? = true := by
+  native_decide
 
 def tooWideRowLayout : Layout :=
   .row { amount := 10 }
@@ -93,20 +83,9 @@ theorem tooWideRowExpectedDoesNotFit : ¬ tooWideRowExpectedExtent.fitsWithin ({
   native_decide
 
 theorem tooWideRowError :
-    (check { extent := { width := 400, height := 40 } } tooWideRowLayout).error? =
-      some (.doesNotFit .row { width := 400, height := 40 } { width := 470, height := 10 }) := by
-  let computedExtent : ExactExtent :=
-    ExactExtent.ofAxis Axis.horizontal
-      (({ width := 150, height := 10 } : ExactExtent).main Axis.horizontal + 10 +
-        ({ width := 150, height := 10 } : ExactExtent).main Axis.horizontal + 10 +
-        ({ width := 150, height := 10 } : ExactExtent).main Axis.horizontal)
-      (({ width := 150, height := 10 } : ExactExtent).cross Axis.horizontal)
-  have computedExtentEq : computedExtent = { width := 470, height := 10 } := by
-    simpa [computedExtent, tooWideRowExpectedExtent] using tooWideRowComputedExtent
-  simp [CheckResult.error?, check, checkWithin, checkChildrenWithin, tooWideRowLayout,
-    CheckedWithin.childLayouts, CheckedLayout.extent, ExactExtent.stack,
-    ExactExtent.stackedMain, ExactExtent.stackedCross, ExactExtent.fitsWithin,
-    computedExtent, computedExtentEq]
+    (check { extent := { width := 400, height := 40 } } tooWideRowLayout).hasError
+      (.doesNotFit .row { width := 400, height := 40 } { width := 470, height := 10 }) = true := by
+  native_decide
 
 def exactColumnCheckedLayout : CheckedLayout :=
   .column { amount := 5 }
@@ -134,6 +113,10 @@ theorem exactColumnChildrenSeparated :
       ]
       Origin.zero
 
+theorem exactColumnChildrenFitWithin :
+    exactColumnCheckedLayout.evaluate.immediateChildrenFitWithin? = true := by
+  native_decide
+
 def paddedLeafCheckedLayout : CheckedLayout :=
   .padding { left := 2, top := 1, right := 3, bottom := 1 }
     (.leaf { width := 10, height := 5 })
@@ -151,12 +134,11 @@ def paddedUnderflowLayout : Layout :=
     (.leaf { width := 1, height := 1 })
 
 theorem paddingUnderflowError :
-    (check { extent := { width := 5, height := 4 } } paddedUnderflowLayout).error? =
-      some
-        (.paddingInsetsOverflow
-          { width := 5, height := 4 }
-          { left := 3, top := 1, right := 3, bottom := 1 }) := by
-  simp [CheckResult.error?, check, checkWithin, paddedUnderflowLayout, ExactExtent.inset?, Insets.horizontal]
+    (check { extent := { width := 5, height := 4 } } paddedUnderflowLayout).hasError
+      (.paddingInsetsOverflow
+        { width := 5, height := 4 }
+        { left := 3, top := 1, right := 3, bottom := 1 }) = true := by
+  native_decide
 
 def framedLeafLayout : Layout :=
   .frame { width := 120, height := 60 }
@@ -166,8 +148,8 @@ def framedLeafCheckedLayout : CheckedLayout :=
   .frame { width := 120, height := 60 } (.leaf { width := 100, height := 50 })
 
 theorem framedLeafCheckGuarantee :
-    (check { extent := { width := 120, height := 60 } } framedLeafLayout).guaranteeClass = .exact := by
-  simp [CheckResult.guaranteeClass, check, checkWithin, framedLeafLayout, ExactExtent.fitsWithin]
+    (check { extent := { width := 120, height := 60 } } framedLeafLayout).isExact = true := by
+  native_decide
 
 theorem framedLeafGeometry :
     framedLeafCheckedLayout.evaluate =
@@ -189,6 +171,62 @@ theorem framedLeafChildFitsWithin :
     CheckedLayout.evaluateAt_frame_immediateChildrenFitWithin
       ({ width := 120, height := 60 } : ExactExtent)
       (.leaf { width := 100, height := 50 })
+      Origin.zero
+      fits
+
+def nestedFrameRowLayout : Layout :=
+  .frame { width := 200, height := 80 }
+    (.padding { left := 10, top := 5, right := 10, bottom := 5 }
+      (.row { amount := 8 }
+        [ .leaf { width := 60, height := 20 }
+        , .leaf { width := 40, height := 30 }
+        ]))
+
+def nestedFrameRowCheckedLayout : CheckedLayout :=
+  .frame { width := 200, height := 80 }
+    (.padding { left := 10, top := 5, right := 10, bottom := 5 }
+      (.row { amount := 8 }
+        [ .leaf { width := 60, height := 20 }
+        , .leaf { width := 40, height := 30 }
+        ]))
+
+theorem nestedFrameRowCheckExact :
+    (check { extent := { width := 200, height := 80 } } nestedFrameRowLayout).isExact = true := by
+  native_decide
+
+theorem nestedFrameRowGeometryRoot :
+    nestedFrameRowCheckedLayout.evaluate.box =
+      { origin := Origin.zero, extent := { width := 200, height := 80 } } := by
+  native_decide
+
+theorem nestedFrameRowInnerOrigins :
+    nestedFrameRowCheckedLayout.evaluate.children.map (fun child => child.origin) =
+      [ Origin.zero ] := by
+  native_decide
+
+theorem nestedFrameRowLeafOrigins :
+    nestedFrameRowCheckedLayout.evaluate.children.map
+      (fun child => child.children.map (fun grand => grand.children.map (fun leaf => leaf.origin))) =
+      [[[ { x := 10, y := 5 }, { x := 78, y := 5 } ]]] := by
+  native_decide
+
+theorem nestedFrameRowPaddingChildFits :
+    ImmediateChildrenFitWithin nestedFrameRowCheckedLayout.evaluate := by
+  have fits :
+      (CheckedLayout.padding { left := 10, top := 5, right := 10, bottom := 5 }
+        (.row { amount := 8 }
+          [ .leaf { width := 60, height := 20 }
+          , .leaf { width := 40, height := 30 }
+          ])).extent.fitsWithin ({ width := 200, height := 80 } : ExactExtent) := by
+    native_decide
+  simpa [nestedFrameRowCheckedLayout, CheckedLayout.evaluate] using
+    CheckedLayout.evaluateAt_frame_immediateChildrenFitWithin
+      ({ width := 200, height := 80 } : ExactExtent)
+      (CheckedLayout.padding { left := 10, top := 5, right := 10, bottom := 5 }
+        (.row { amount := 8 }
+          [ .leaf { width := 60, height := 20 }
+          , .leaf { width := 40, height := 30 }
+          ]))
       Origin.zero
       fits
 
