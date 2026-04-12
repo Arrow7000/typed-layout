@@ -88,11 +88,15 @@ text, direct `checkWithinArtifact` / `checkArtifact` helpers, and direct
 `checkWithinRenderedDocument` / `checkRenderedDocument`,
 `checkWithinRenderHtml` / `checkRenderHtml`, and `checkWithinRenderCss` /
 `checkRenderCss` helpers that stay routed through the typed backend/document
-layers. The proof bridges recover exact profile/guarantee/bounds metadata from
-successful artifact lowering and recover artifact/document provenance from
-successful rendered-output helpers. This is still only an exact-fragment
-projection layer: it is not yet a backend-fidelity proof, and it does not by
-itself upgrade any result to `Conditional(profile)`.
+layers, plus a small standalone exact-page output type that assembles rendered
+body/style text into a complete HTML page string with matching
+`checkWithinRenderedPage` / `checkRenderedPage` and
+`checkWithinRenderPage` / `checkRenderPage` helpers. The proof bridges recover
+exact profile/guarantee/bounds metadata from successful artifact lowering and
+recover artifact/document provenance from successful rendered-output helpers.
+This is still only an exact-fragment projection layer: it is not yet a
+backend-fidelity proof, and it does not by itself upgrade any result to
+`Conditional(profile)`.
 
 ## 7. Likely next backend questions
 

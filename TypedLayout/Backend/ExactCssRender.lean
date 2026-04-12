@@ -151,6 +151,30 @@ structure RenderedDocument where
   css : String
   deriving DecidableEq, Repr
 
+/-- Final concrete standalone-page output for the exact-fragment renderer. -/
+structure RenderedPage where
+  html : String
+  deriving DecidableEq, Repr
+
+namespace RenderedPage
+
+/-- Assemble rendered exact-fragment HTML/CSS text into a standalone page. -/
+def ofRenderedDocument (document : RenderedDocument) : RenderedPage :=
+  { html :=
+      "<!DOCTYPE html><html><head><style>" ++ document.css ++
+        "</style></head>" ++ document.html ++ "</html>"
+  }
+
+end RenderedPage
+
+namespace RenderedDocument
+
+/-- Promote a rendered exact-fragment document to a standalone rendered page. -/
+def standalonePage (document : RenderedDocument) : RenderedPage :=
+  RenderedPage.ofRenderedDocument document
+
+end RenderedDocument
+
 namespace ClassName
 
 /-- Render generated exact-fragment classes to valid CSS/HTML class tokens. -/
@@ -221,6 +245,10 @@ def render (document : Document) : RenderedDocument :=
   , css := Stylesheet.render document.stylesheet
   }
 
+/-- Render an exact-fragment typed document IR to a standalone HTML page. -/
+def renderPage (document : Document) : RenderedPage :=
+  document.render.standalonePage
+
 end Document
 
 end ExactDocument
@@ -231,6 +259,10 @@ namespace Node
 def renderedDocument (node : Node) : ExactDocument.RenderedDocument :=
   node.document.render
 
+/-- Render a backend node via the typed exact document IR to a standalone page. -/
+def renderedPage (node : Node) : ExactDocument.RenderedPage :=
+  node.document.renderPage
+
 /-- Render a backend node to concrete HTML text via the typed document IR. -/
 def renderHtml (node : Node) : String :=
   node.renderedDocument.html
@@ -239,8 +271,16 @@ def renderHtml (node : Node) : String :=
 def renderCss (node : Node) : String :=
   node.renderedDocument.css
 
+/-- Render a backend node to a standalone HTML page string via the typed document IR. -/
+def renderPage (node : Node) : String :=
+  node.renderedPage.html
+
 theorem renderedDocument_eq_document_render (node : Node) :
     node.renderedDocument = node.document.render :=
+  rfl
+
+theorem renderedPage_eq_document_renderPage (node : Node) :
+    node.renderedPage = node.document.renderPage :=
   rfl
 
 end Node
@@ -251,6 +291,10 @@ namespace Artifact
 def renderedDocument (artifact : Artifact) : ExactDocument.RenderedDocument :=
   artifact.document.render
 
+/-- Render a backend artifact via the typed exact document IR to a standalone page. -/
+def renderedPage (artifact : Artifact) : ExactDocument.RenderedPage :=
+  artifact.document.renderPage
+
 /-- Render a backend artifact to concrete HTML text via the typed document IR. -/
 def renderHtml (artifact : Artifact) : String :=
   artifact.renderedDocument.html
@@ -259,8 +303,16 @@ def renderHtml (artifact : Artifact) : String :=
 def renderCss (artifact : Artifact) : String :=
   artifact.renderedDocument.css
 
+/-- Render a backend artifact to a standalone HTML page string via the typed document IR. -/
+def renderPage (artifact : Artifact) : String :=
+  artifact.renderedPage.html
+
 theorem renderedDocument_eq_document_render (artifact : Artifact) :
     artifact.renderedDocument = artifact.document.render :=
+  rfl
+
+theorem renderedPage_eq_document_renderPage (artifact : Artifact) :
+    artifact.renderedPage = artifact.document.renderPage :=
   rfl
 
 end Artifact
@@ -297,6 +349,28 @@ def checkWithinRenderCss (available : AvailableSpace) (layout : Layout) :
 def checkRenderCss (available : AvailableSpace) (layout : Layout) :
     CheckResult String :=
   (checkArtifact available layout).map Artifact.renderCss
+
+/-- Check and, on exact success, lower straight to a rendered standalone page via
+the typed artifact/document pipeline. -/
+def checkWithinRenderedPage (available : AvailableSpace) (layout : Layout) :
+    CheckResult ExactDocument.RenderedPage :=
+  (checkWithinArtifact available layout).map Artifact.renderedPage
+
+/-- Alias of `checkWithinRenderedPage` at the public exact-check boundary. -/
+def checkRenderedPage (available : AvailableSpace) (layout : Layout) :
+    CheckResult ExactDocument.RenderedPage :=
+  (checkArtifact available layout).map Artifact.renderedPage
+
+/-- Check and, on exact success, lower straight to standalone HTML page text via
+the typed artifact/document pipeline. -/
+def checkWithinRenderPage (available : AvailableSpace) (layout : Layout) :
+    CheckResult String :=
+  (checkWithinArtifact available layout).map Artifact.renderPage
+
+/-- Alias of `checkWithinRenderPage` at the public exact-check boundary. -/
+def checkRenderPage (available : AvailableSpace) (layout : Layout) :
+    CheckResult String :=
+  (checkArtifact available layout).map Artifact.renderPage
 
 theorem checkWithinRenderedDocument_exact_artifact
     {available : AvailableSpace}
@@ -359,6 +433,51 @@ theorem checkWithinRenderCss_exact_artifact
     with ⟨artifact, hArtifact, hCss⟩
   exact ⟨artifact, hArtifact, hCss⟩
 
+theorem checkWithinRenderedPage_exact_artifact
+    {available : AvailableSpace}
+    {layout : Layout}
+    {rendered : ExactDocument.RenderedPage}
+    (h : checkWithinRenderedPage available layout = .exact rendered) :
+    ∃ artifact : Artifact,
+      checkWithinArtifact available layout = .exact artifact ∧
+      artifact.renderedPage = rendered := by
+  rcases exact_of_map_eq_exact
+      (result := checkWithinArtifact available layout)
+      (f := Artifact.renderedPage)
+      (output := rendered)
+      (by simpa [checkWithinRenderedPage] using h)
+    with ⟨artifact, hArtifact, hRendered⟩
+  exact ⟨artifact, hArtifact, hRendered⟩
+
+theorem checkWithinRenderedPage_exact_document
+    {available : AvailableSpace}
+    {layout : Layout}
+    {rendered : ExactDocument.RenderedPage}
+    (h : checkWithinRenderedPage available layout = .exact rendered) :
+    ∃ artifact : Artifact,
+      checkWithinArtifact available layout = .exact artifact ∧
+      artifact.document.renderPage = rendered := by
+  rcases checkWithinRenderedPage_exact_artifact h with ⟨artifact, hArtifact, hRendered⟩
+  refine ⟨artifact, hArtifact, ?_⟩
+  rw [Artifact.renderedPage_eq_document_renderPage artifact] at hRendered
+  exact hRendered
+
+theorem checkWithinRenderPage_exact_artifact
+    {available : AvailableSpace}
+    {layout : Layout}
+    {page : String}
+    (h : checkWithinRenderPage available layout = .exact page) :
+    ∃ artifact : Artifact,
+      checkWithinArtifact available layout = .exact artifact ∧
+      artifact.renderPage = page := by
+  rcases exact_of_map_eq_exact
+      (result := checkWithinArtifact available layout)
+      (f := Artifact.renderPage)
+      (output := page)
+      (by simpa [checkWithinRenderPage] using h)
+    with ⟨artifact, hArtifact, hPage⟩
+  exact ⟨artifact, hArtifact, hPage⟩
+
 theorem checkRenderedDocument_exact_artifact
     {available : AvailableSpace}
     {layout : Layout}
@@ -374,6 +493,35 @@ theorem checkRenderedDocument_exact_artifact
       (by simpa [checkRenderedDocument] using h)
     with ⟨artifact, hArtifact, hRendered⟩
   exact ⟨artifact, hArtifact, hRendered⟩
+
+theorem checkRenderedPage_exact_artifact
+    {available : AvailableSpace}
+    {layout : Layout}
+    {rendered : ExactDocument.RenderedPage}
+    (h : checkRenderedPage available layout = .exact rendered) :
+    ∃ artifact : Artifact,
+      checkArtifact available layout = .exact artifact ∧
+      artifact.renderedPage = rendered := by
+  rcases exact_of_map_eq_exact
+      (result := checkArtifact available layout)
+      (f := Artifact.renderedPage)
+      (output := rendered)
+      (by simpa [checkRenderedPage] using h)
+    with ⟨artifact, hArtifact, hRendered⟩
+  exact ⟨artifact, hArtifact, hRendered⟩
+
+theorem checkRenderedPage_exact_document
+    {available : AvailableSpace}
+    {layout : Layout}
+    {rendered : ExactDocument.RenderedPage}
+    (h : checkRenderedPage available layout = .exact rendered) :
+    ∃ artifact : Artifact,
+      checkArtifact available layout = .exact artifact ∧
+      artifact.document.renderPage = rendered := by
+  rcases checkRenderedPage_exact_artifact h with ⟨artifact, hArtifact, hRendered⟩
+  refine ⟨artifact, hArtifact, ?_⟩
+  rw [Artifact.renderedPage_eq_document_renderPage artifact] at hRendered
+  exact hRendered
 
 theorem checkRenderedDocument_exact_document
     {available : AvailableSpace}
@@ -419,5 +567,21 @@ theorem checkRenderCss_exact_artifact
       (by simpa [checkRenderCss] using h)
     with ⟨artifact, hArtifact, hCss⟩
   exact ⟨artifact, hArtifact, hCss⟩
+
+theorem checkRenderPage_exact_artifact
+    {available : AvailableSpace}
+    {layout : Layout}
+    {page : String}
+    (h : checkRenderPage available layout = .exact page) :
+    ∃ artifact : Artifact,
+      checkArtifact available layout = .exact artifact ∧
+      artifact.renderPage = page := by
+  rcases exact_of_map_eq_exact
+      (result := checkArtifact available layout)
+      (f := Artifact.renderPage)
+      (output := page)
+      (by simpa [checkRenderPage] using h)
+    with ⟨artifact, hArtifact, hPage⟩
+  exact ⟨artifact, hArtifact, hPage⟩
 
 end TypedLayout.Backend.ExactCss

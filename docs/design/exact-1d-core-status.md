@@ -61,6 +61,11 @@ The implemented exact fragment currently includes:
   artifacts without raw string emission
 - a total exact-fragment rendering layer that projects the typed backend/document
   IR to concrete HTML/CSS text at the final output boundary
+- a small standalone exact-page output layer that assembles rendered document
+  HTML/CSS into a complete HTML page string, with direct
+  `checkWithinRenderedPage` / `checkRenderedPage` and
+  `checkWithinRenderPage` / `checkRenderPage` helpers still routed through the
+  typed artifact/document pipeline
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -93,8 +98,8 @@ The current Lean development already contains proofs/examples for:
   the blessed target profile, exact source guarantee, output-bounds-within-input
   bounds, and checked/certified root correspondence facts
 - rendered-output bridge theorems showing successful exact rendered-document /
-  HTML / CSS helpers still recover the backend artifact/document provenance they
-  came from
+  HTML / CSS / standalone-page helpers still recover the backend artifact/
+  document provenance they came from
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
 - bridges showing the exposed summary invariants are backed by `LocalSound`

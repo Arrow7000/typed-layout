@@ -175,16 +175,31 @@ theorem paddedLeafDocumentRuleClasses :
 def exactRowRenderedDocument : ExactDocument.RenderedDocument :=
   exactRowDocument.render
 
+def exactRowRenderedPage : ExactDocument.RenderedPage :=
+  exactRowDocument.renderPage
+
 theorem exactRowRenderedDocumentMatchesArtifact :
     exactRowArtifact.renderedDocument = exactRowRenderedDocument := by
+  native_decide
+
+theorem exactRowRenderedPageMatchesArtifact :
+    exactRowArtifact.renderedPage = exactRowRenderedPage := by
   native_decide
 
 theorem exactRowCheckWithinRenderedDocumentExact :
     checkWithinRenderedDocument exactRowAvailable exactRowLayout = .exact exactRowRenderedDocument := by
   native_decide
 
+theorem exactRowCheckWithinRenderedPageExact :
+    checkWithinRenderedPage exactRowAvailable exactRowLayout = .exact exactRowRenderedPage := by
+  native_decide
+
 theorem exactRowCheckRenderedDocumentExact :
     checkRenderedDocument exactRowAvailable exactRowLayout = .exact exactRowRenderedDocument := by
+  native_decide
+
+theorem exactRowCheckRenderedPageExact :
+    checkRenderedPage exactRowAvailable exactRowLayout = .exact exactRowRenderedPage := by
   native_decide
 
 theorem exactRowRenderedDocumentRecoveredFromCheck :
@@ -192,6 +207,12 @@ theorem exactRowRenderedDocumentRecoveredFromCheck :
       checkArtifact exactRowAvailable exactRowLayout = .exact artifact ∧
       artifact.document.render = exactRowRenderedDocument := by
   exact checkRenderedDocument_exact_document exactRowCheckRenderedDocumentExact
+
+theorem exactRowRenderedPageRecoveredFromCheck :
+    ∃ artifact : Artifact,
+      checkArtifact exactRowAvailable exactRowLayout = .exact artifact ∧
+      artifact.document.renderPage = exactRowRenderedPage := by
+  exact checkRenderedPage_exact_document exactRowCheckRenderedPageExact
 
 theorem exactRowCheckRenderHtmlExact :
     checkRenderHtml exactRowAvailable exactRowLayout = .exact exactRowRenderedDocument.html := by
@@ -207,11 +228,21 @@ theorem exactRowCheckRenderCssExact :
     checkRenderCss exactRowAvailable exactRowLayout = .exact exactRowRenderedDocument.css := by
   native_decide
 
+theorem exactRowCheckRenderPageExact :
+    checkRenderPage exactRowAvailable exactRowLayout = .exact exactRowRenderedPage.html := by
+  native_decide
+
 theorem exactRowRenderedCssRecoveredFromCheck :
     ∃ artifact : Artifact,
       checkArtifact exactRowAvailable exactRowLayout = .exact artifact ∧
       artifact.renderCss = exactRowRenderedDocument.css := by
   exact checkRenderCss_exact_artifact exactRowCheckRenderCssExact
+
+theorem exactRowRenderedPageHtmlRecoveredFromCheck :
+    ∃ artifact : Artifact,
+      checkArtifact exactRowAvailable exactRowLayout = .exact artifact ∧
+      artifact.renderPage = exactRowRenderedPage.html := by
+  exact checkRenderPage_exact_artifact exactRowCheckRenderPageExact
 
 theorem exactRowRenderedHtml :
     exactRowRenderedDocument.html =
@@ -226,14 +257,34 @@ theorem exactRowRenderedCss :
       ".tl-3{box-sizing:border-box;width:200px;height:25px;padding-left:0px;padding-top:0px;padding-right:0px;padding-bottom:0px;display:block;flex-grow:0;flex-shrink:0;}" := by
   native_decide
 
+theorem exactRowRenderedPageHtml :
+    exactRowRenderedPage.html =
+      "<!DOCTYPE html><html><head><style>" ++
+      ".tl-0{box-sizing:border-box;width:470px;height:30px;padding-left:0px;padding-top:0px;padding-right:0px;padding-bottom:0px;display:flex;flex-direction:row;gap:10px;flex-wrap:nowrap;justify-content:flex-start;align-items:flex-start;flex-grow:0;flex-shrink:0;}\n" ++
+      ".tl-1{box-sizing:border-box;width:100px;height:20px;padding-left:0px;padding-top:0px;padding-right:0px;padding-bottom:0px;display:block;flex-grow:0;flex-shrink:0;}\n" ++
+      ".tl-2{box-sizing:border-box;width:150px;height:30px;padding-left:0px;padding-top:0px;padding-right:0px;padding-bottom:0px;display:block;flex-grow:0;flex-shrink:0;}\n" ++
+      ".tl-3{box-sizing:border-box;width:200px;height:25px;padding-left:0px;padding-top:0px;padding-right:0px;padding-bottom:0px;display:block;flex-grow:0;flex-shrink:0;}" ++
+      "</style></head><body><div class=\"tl-0\"><div class=\"tl-1\"></div><div class=\"tl-2\"></div><div class=\"tl-3\"></div></div></body></html>" := by
+  native_decide
+
 def paddedLeafRenderedDocument : ExactDocument.RenderedDocument :=
   paddedLeafDocument.render
+
+def paddedLeafRenderedPage : ExactDocument.RenderedPage :=
+  paddedLeafDocument.renderPage
 
 def framedLeafRenderedDocument : ExactDocument.RenderedDocument :=
   framedLeafArtifact.renderedDocument
 
+def framedLeafRenderedPage : ExactDocument.RenderedPage :=
+  framedLeafArtifact.renderedPage
+
 theorem framedLeafCheckRenderedDocumentExact :
     checkRenderedDocument framedLeafAvailable framedLeafLayout = .exact framedLeafRenderedDocument := by
+  native_decide
+
+theorem framedLeafCheckRenderedPageExact :
+    checkRenderedPage framedLeafAvailable framedLeafLayout = .exact framedLeafRenderedPage := by
   native_decide
 
 theorem framedLeafCheckRenderHtmlExact :
@@ -242,6 +293,10 @@ theorem framedLeafCheckRenderHtmlExact :
 
 theorem framedLeafCheckRenderCssExact :
     checkRenderCss framedLeafAvailable framedLeafLayout = .exact framedLeafRenderedDocument.css := by
+  native_decide
+
+theorem framedLeafCheckRenderPageExact :
+    checkRenderPage framedLeafAvailable framedLeafLayout = .exact framedLeafRenderedPage.html := by
   native_decide
 
 theorem paddedLeafRenderedHtml :
@@ -253,6 +308,14 @@ theorem paddedLeafRenderedCss :
     paddedLeafRenderedDocument.css =
       ".tl-0{box-sizing:border-box;width:15px;height:7px;padding-left:2px;padding-top:1px;padding-right:3px;padding-bottom:1px;display:block;flex-grow:0;flex-shrink:0;}\n" ++
       ".tl-1{box-sizing:border-box;width:10px;height:5px;padding-left:0px;padding-top:0px;padding-right:0px;padding-bottom:0px;display:block;flex-grow:0;flex-shrink:0;}" := by
+  native_decide
+
+theorem paddedLeafRenderedPageHtml :
+    paddedLeafRenderedPage.html =
+      "<!DOCTYPE html><html><head><style>" ++
+      ".tl-0{box-sizing:border-box;width:15px;height:7px;padding-left:2px;padding-top:1px;padding-right:3px;padding-bottom:1px;display:block;flex-grow:0;flex-shrink:0;}\n" ++
+      ".tl-1{box-sizing:border-box;width:10px;height:5px;padding-left:0px;padding-top:0px;padding-right:0px;padding-bottom:0px;display:block;flex-grow:0;flex-shrink:0;}" ++
+      "</style></head><body><div class=\"tl-0\"><div class=\"tl-1\"></div></div></body></html>" := by
   native_decide
 
 end TypedLayout.Backend.ExactCssExamples
