@@ -19,6 +19,7 @@ This note records what the current Lean core actually covers right now.
 - `TypedLayout/Backend/ExactCss.lean`
 - `TypedLayout/Backend/ExactCssRender.lean`
 - `TypedLayout/Backend/ExactCssFixtures.lean`
+- `TypedLayout/Backend/ExactCssManifest.lean`
 - `TypedLayout/Backend/ExactCssExamples.lean`
 
 ## Current implemented fragment
@@ -74,6 +75,10 @@ The implemented exact fragment currently includes:
   canonical exact row / padded leaf / framed leaf / nested-frame-row fixtures
   that package the public artifact/render helpers for future backend-fidelity
   work
+- a small typed export/manifest layer that projects canonical exact fixture ids to
+  stable output-boundary slugs/file names and packages rendered-document /
+  rendered-page outputs into manifest entries without adding IO or an external
+  harness
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -113,6 +118,9 @@ The current Lean development already contains proofs/examples for:
   lowering keeps the document rooted at an unstyled single-child body
 - a canonical typed backend fixture layer that keeps a small exact-example corpus
   available through typed identifiers instead of loose ad-hoc example selection
+- a typed manifest/export layer showing the canonical exact fixtures can be
+  collected with stable slugs/file names while preserving rendered-page
+  provenance back to the exact fixture corpus
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
 - bridges showing the exposed summary invariants are backed by `LocalSound`
