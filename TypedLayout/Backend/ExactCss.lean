@@ -452,6 +452,224 @@ theorem ofCertifiedWithin_root_matches_sourceKind {available : AvailableSpace}
 
 end Artifact
 
+/- Typed HTML/CSS document IR for the current exact backend fragment.
+
+This stays intentionally small and div-centric: a stylesheet is a list of typed
+class rules that reuse the exact backend `Style`, and the HTML side is just a
+`body` wrapper around generated `div` elements. -/
+namespace ExactDocument
+
+/-- Generated stylesheet class handle for lowered exact nodes. -/
+structure ClassName where
+  serial : Nat
+  deriving DecidableEq, Repr
+
+/-- Tiny exact-fragment HTML tag domain. -/
+inductive Tag where
+  | body
+  | div
+  deriving DecidableEq, Repr
+
+/-- Exact-fragment HTML element tree.
+
+The current lowering only emits `div` elements with generated classes, wrapped in
+an unstyled `body`. -/
+inductive Element where
+  | node (tag : Tag) (classes : List ClassName) (children : List Element)
+  deriving Repr
+
+mutual
+
+private def decEqElement : (left right : Element) → Decidable (left = right)
+  | .node leftTag leftClasses leftChildren, .node rightTag rightClasses rightChildren =>
+      match decEq leftTag rightTag with
+      | isFalse hTag =>
+          isFalse (by
+            intro h
+            injection h with hTag'
+            exact hTag hTag')
+      | isTrue hTag =>
+          match decEq leftClasses rightClasses with
+          | isFalse hClasses =>
+              isFalse (by
+                intro h
+                injection h with _ hClasses'
+                exact hClasses hClasses')
+          | isTrue hClasses =>
+              match decEqElementList leftChildren rightChildren with
+              | isFalse hChildren =>
+                  isFalse (by
+                    intro h
+                    injection h with _ _ hChildren'
+                    exact hChildren hChildren')
+              | isTrue hChildren =>
+                  isTrue (by
+                    cases hTag
+                    cases hClasses
+                    cases hChildren
+                    rfl)
+
+private def decEqElementList : (left right : List Element) → Decidable (left = right)
+  | [], [] => isTrue rfl
+  | [], _ :: _ => isFalse (by intro h; cases h)
+  | _ :: _, [] => isFalse (by intro h; cases h)
+  | leftHead :: leftTail, rightHead :: rightTail =>
+      match decEqElement leftHead rightHead with
+      | isFalse hHead =>
+          isFalse (by
+            intro h
+            injection h with hHead'
+            exact hHead hHead')
+      | isTrue hHead =>
+          match decEqElementList leftTail rightTail with
+          | isFalse hTail =>
+              isFalse (by
+                intro h
+                injection h with _ hTail'
+                exact hTail hTail')
+          | isTrue hTail =>
+              isTrue (by
+                cases hHead
+                cases hTail
+                rfl)
+
+end
+
+instance : DecidableEq Element := decEqElement
+
+namespace Element
+
+def body (children : List Element) : Element :=
+  .node .body [] children
+
+def div (className : ClassName) (children : List Element := []) : Element :=
+  .node .div [className] children
+
+end Element
+
+/-- Exact-fragment stylesheet rule keyed by a generated class handle. -/
+structure ClassRule where
+  className : ClassName
+  style : Style
+  deriving DecidableEq, Repr
+
+/-- Exact-fragment stylesheet. -/
+structure Stylesheet where
+  rules : List ClassRule
+  deriving DecidableEq, Repr
+
+/-- Exact-fragment HTML/CSS document.
+
+The document keeps HTML structure and CSS structure separate while still reusing
+the typed exact backend style domain. -/
+structure Document where
+  body : Element
+  stylesheet : Stylesheet
+  deriving DecidableEq, Repr
+
+private theorem sizeOf_children_lt (node : Node) :
+    sizeOf node.children < sizeOf node := by
+  cases node
+  simp
+  omega
+
+private theorem sizeOf_head_lt_cons (child : Node) (rest : List Node) :
+    sizeOf child < sizeOf (child :: rest) := by
+  simp
+  omega
+
+private theorem sizeOf_tail_lt_cons (child : Node) (rest : List Node) :
+    sizeOf rest < sizeOf (child :: rest) := by
+  simp
+  omega
+
+private structure LoweredNode where
+  element : Element
+  rules : List ClassRule
+  nextClass : Nat
+
+private structure LoweredNodes where
+  elements : List Element
+  rules : List ClassRule
+  nextClass : Nat
+
+mutual
+
+private def lowerNode (nextClass : Nat) : Node → LoweredNode
+  | node =>
+      let className : ClassName := { serial := nextClass }
+      let loweredChildren := lowerNodes (nextClass + 1) node.children
+      { element := Element.div className loweredChildren.elements
+      , rules := { className := className, style := node.style } :: loweredChildren.rules
+      , nextClass := loweredChildren.nextClass
+      }
+
+termination_by
+  node => sizeOf node
+
+decreasing_by
+  · exact sizeOf_children_lt node
+
+private def lowerNodes (nextClass : Nat) : List Node → LoweredNodes
+  | [] =>
+      { elements := []
+      , rules := []
+      , nextClass := nextClass
+      }
+  | child :: rest =>
+      let loweredChild := lowerNode nextClass child
+      let loweredRest := lowerNodes loweredChild.nextClass rest
+      { elements := loweredChild.element :: loweredRest.elements
+      , rules := loweredChild.rules ++ loweredRest.rules
+      , nextClass := loweredRest.nextClass
+      }
+
+termination_by
+  children => sizeOf children
+
+decreasing_by
+  · exact sizeOf_head_lt_cons child rest
+  · exact sizeOf_tail_lt_cons child rest
+
+end
+
+/-- Lower a backend node tree into the tiny exact-fragment HTML/CSS document IR. -/
+def ofNode (node : Node) : Document :=
+  let lowered := lowerNode 0 node
+  { body := Element.body [lowered.element]
+  , stylesheet := { rules := lowered.rules }
+  }
+
+/-- Lower a backend artifact into the tiny exact-fragment HTML/CSS document IR. -/
+def ofArtifact (artifact : Artifact) : Document :=
+  ofNode artifact.root
+
+theorem ofArtifact_eq_ofNode (artifact : Artifact) :
+    ofArtifact artifact = ofNode artifact.root :=
+  rfl
+
+end ExactDocument
+
+namespace Node
+
+/-- Render-free lowering of a backend node into the typed exact document IR. -/
+def document (node : Node) : ExactDocument.Document :=
+  ExactDocument.ofNode node
+
+end Node
+
+namespace Artifact
+
+/-- Render-free lowering of a backend artifact into the typed exact document IR. -/
+def document (artifact : Artifact) : ExactDocument.Document :=
+  ExactDocument.ofArtifact artifact
+
+theorem document_eq_ofNode (artifact : Artifact) :
+    artifact.document = artifact.root.document :=
+  rfl
+
+end Artifact
+
 def checkWithinArtifact (available : AvailableSpace) (layout : Layout) :
     CheckResult Artifact :=
   (checkWithinCertified available layout).map Artifact.ofCertifiedWithin

@@ -121,4 +121,52 @@ theorem exactRowArtifactRecoveredFromChecked :
   · simpa [exactRowArtifact] using
       Artifact.ofCheckedWithin_root_size exactRowCertified.checked
 
+def exactRowDocument : ExactDocument.Document :=
+  exactRowArtifact.document
+
+theorem exactRowArtifactDocumentMatchesNode :
+    exactRowArtifact.document = exactRowNode.document := by
+  native_decide
+
+theorem exactRowDocumentBody :
+    exactRowDocument.body =
+      ExactDocument.Element.body
+        [ ExactDocument.Element.div { serial := 0 }
+            [ ExactDocument.Element.div { serial := 1 }
+            , ExactDocument.Element.div { serial := 2 }
+            , ExactDocument.Element.div { serial := 3 }
+            ]
+        ] := by
+  native_decide
+
+theorem exactRowDocumentRuleClasses :
+    exactRowDocument.stylesheet.rules.map (fun rule => rule.className.serial) =
+      [0, 1, 2, 3] := by
+  native_decide
+
+theorem exactRowDocumentRuleSizes :
+    exactRowDocument.stylesheet.rules.map (fun rule => rule.style.size) =
+      [ { width := .px 470, height := .px 30 }
+      , { width := .px 100, height := .px 20 }
+      , { width := .px 150, height := .px 30 }
+      , { width := .px 200, height := .px 25 }
+      ] := by
+  native_decide
+
+def paddedLeafDocument : ExactDocument.Document :=
+  paddedLeafNode.document
+
+theorem paddedLeafDocumentBody :
+    paddedLeafDocument.body =
+      ExactDocument.Element.body
+        [ ExactDocument.Element.div { serial := 0 }
+            [ ExactDocument.Element.div { serial := 1 } ]
+        ] := by
+  native_decide
+
+theorem paddedLeafDocumentRuleClasses :
+    paddedLeafDocument.stylesheet.rules.map (fun rule => rule.className.serial) =
+      [0, 1] := by
+  native_decide
+
 end TypedLayout.Backend.ExactCssExamples

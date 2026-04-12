@@ -51,6 +51,9 @@ The implemented exact fragment currently includes:
   frame lowering from checked/certified layouts
 - direct `checkWithinArtifact` / `checkArtifact` helpers for lowering successful
   exact checks straight to backend artifacts
+- a tiny typed exact-fragment HTML/CSS document IR with generated-class
+  stylesheet rules and `body`/`div` element trees lowered from backend nodes and
+  artifacts without raw string emission
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -135,8 +138,8 @@ Before any serious CSS lowering, the next desirable semantic work is still:
 - a cleaner checked/proof boundary if the guarantee story keeps growing
 - clearer alignment between exact guarantees and future `conditional(profile)`
   guarantees
-- string emission plus a fidelity story connecting the typed backend IR to CSS
-  under the blessed profile
+- document rendering/string emission plus a fidelity story connecting the typed
+  backend IR and typed document IR to CSS under the blessed profile
 
 ## What is still missing before text work
 
