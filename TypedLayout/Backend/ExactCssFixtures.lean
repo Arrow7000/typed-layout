@@ -1,4 +1,4 @@
-import TypedLayout.Backend.ExactCssProjection
+import TypedLayout.Backend.ExactCssProbePlan
 import TypedLayout.Core.Examples
 
 namespace TypedLayout.Backend.ExactCssFixtures
@@ -68,6 +68,9 @@ def document (fixture : Fixture) : ExactDocument.Document :=
 
 def expectations (fixture : Fixture) : ExactDocument.Fidelity.DocumentExpectation :=
   fixture.projection.expectations
+
+def probePlan (fixture : Fixture) : ExactDocument.ProbePlan.Plan :=
+  fixture.projection.probePlan
 
 def renderedDocument (fixture : Fixture) : ExactDocument.RenderedDocument :=
   fixture.artifact.renderedDocument
@@ -175,6 +178,30 @@ theorem expectation_nodeCount_eq_documentRuleCount (fixture : Fixture) :
   simpa [expectations, document, Fixture.document] using
     fixture.projection.expectation_nodeCount_eq_documentRuleCount
 
+theorem probePlan_targetProfile_exact1D_v1 (fixture : Fixture) :
+    fixture.probePlan.targetProfile = .exact1D_v1 := by
+  show fixture.projection.probePlan.targetProfile = .exact1D_v1
+  exact fixture.projection.probePlan_targetProfile_exact1D_v1
+
+theorem probePlan_sourceGuarantee_exact (fixture : Fixture) :
+    fixture.probePlan.sourceGuarantee = .exact := by
+  simpa [probePlan] using fixture.projection.probePlan_sourceGuarantee_exact
+
+theorem probePlan_labels_eq_expectation_labels (fixture : Fixture) :
+    fixture.probePlan.labels = fixture.expectations.labels := by
+  simpa [probePlan, expectations] using
+    fixture.projection.probePlan_labels_eq_expectation_labels
+
+theorem probePlan_boxes_eq_expectation_boxes (fixture : Fixture) :
+    fixture.probePlan.boxes = fixture.expectations.boxes := by
+  simpa [probePlan, expectations] using
+    fixture.projection.probePlan_boxes_eq_expectation_boxes
+
+theorem probePlan_nodeCount_eq_documentRuleCount (fixture : Fixture) :
+    fixture.probePlan.nodeCount = fixture.document.stylesheet.rules.length := by
+  simpa [probePlan, document, Fixture.document] using
+    fixture.projection.probePlan_nodeCount_eq_documentRuleCount
+
 end Fixture
 
 def fixture : FixtureId → Fixture
@@ -273,8 +300,27 @@ theorem exactRowFixture_expectationBoxes :
       [ { origin := Origin.zero, extent := { width := 470, height := 30 } }
       , { origin := Origin.zero, extent := { width := 100, height := 20 } }
       , { origin := { x := 110, y := 0 }, extent := { width := 150, height := 30 } }
+       , { origin := { x := 270, y := 0 }, extent := { width := 200, height := 25 } }
+       ] := by
+  native_decide
+
+theorem exactRowFixture_probePlanLabelSerials :
+    ExactDocument.ClassName.serials exactRowFixture.probePlan.labels = [0, 1, 2, 3] := by
+  rw [Fixture.probePlan_labels_eq_expectation_labels]
+  exact exactRowFixture_expectationLabelSerials
+
+theorem exactRowFixture_probePlanBoxes :
+    exactRowFixture.probePlan.boxes =
+      [ { origin := Origin.zero, extent := { width := 470, height := 30 } }
+      , { origin := Origin.zero, extent := { width := 100, height := 20 } }
+      , { origin := { x := 110, y := 0 }, extent := { width := 150, height := 30 } }
       , { origin := { x := 270, y := 0 }, extent := { width := 200, height := 25 } }
       ] := by
+  rw [Fixture.probePlan_boxes_eq_expectation_boxes]
+  exact exactRowFixture_expectationBoxes
+
+theorem exactRowCheckWithinProbePlanExact :
+    checkWithinProbePlan exactRowAvailable exactRowLayout = .exact exactRowFixture.probePlan := by
   native_decide
 
 theorem paddedLeafFixture_renderCssResult_exact :
@@ -286,6 +332,10 @@ theorem paddedLeafFixture_expectationBoxes :
       [ { origin := Origin.zero, extent := { width := 15, height := 7 } }
       , { origin := { x := 2, y := 1 }, extent := { width := 10, height := 5 } }
       ] := by
+  native_decide
+
+theorem paddedLeafFixture_probePlanNodeCount :
+    paddedLeafFixture.probePlan.nodeCount = 2 := by
   native_decide
 
 theorem framedLeafFixture_renderedPageResult_exact :
@@ -318,5 +368,16 @@ theorem nestedFrameRowFixture_expectationOrigins :
       , { x := 78, y := 5 }
       ] := by
   native_decide
+
+theorem nestedFrameRowFixture_probePlanOrigins :
+    nestedFrameRowFixture.probePlan.boxes.map (fun box => box.origin) =
+      [ Origin.zero
+      , Origin.zero
+      , { x := 10, y := 5 }
+      , { x := 10, y := 5 }
+      , { x := 78, y := 5 }
+      ] := by
+  rw [Fixture.probePlan_boxes_eq_expectation_boxes]
+  exact nestedFrameRowFixture_expectationOrigins
 
 end TypedLayout.Backend.ExactCssFixtures

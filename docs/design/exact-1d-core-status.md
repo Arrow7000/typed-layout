@@ -18,6 +18,7 @@ This note records what the current Lean core actually covers right now.
 - `TypedLayout/Core/Examples.lean`
 - `TypedLayout/Backend/ExactCss.lean`
 - `TypedLayout/Backend/ExactCssRender.lean`
+- `TypedLayout/Backend/ExactCssProbePlan.lean`
 - `TypedLayout/Backend/ExactCssFixtures.lean`
 - `TypedLayout/Backend/ExactCssManifest.lean`
 - `TypedLayout/Backend/ExactCssExamples.lean`
@@ -85,6 +86,9 @@ The implemented exact fragment currently includes:
 - a typed exact backend-fidelity expectation layer that derives generated-class,
   backend-style, and source-box expectations from successful exact checks for a
   future harness, still without introducing browser automation yet
+- a typed exact browser-probe plan layer that projects those fidelity
+  expectations to per-generated-class probe targets, keeping selectors typed as
+  generated labels until the final browser boundary
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -136,6 +140,10 @@ The current Lean development already contains proofs/examples for:
 - a typed backend-fidelity expectation layer showing successful exact checks can
   recover unique generated labels, exact source boxes, and backend rule/style
   correspondence for the lowered document, with fixture-level expectation
+  examples for the current exact corpus
+- a typed browser-probe plan layer showing successful exact checks can recover
+  one probe target per lowered generated class, with labels/boxes/counts still
+  lining up with the backend-fidelity expectation layer and fixture-level probe
   examples for the current exact corpus
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
