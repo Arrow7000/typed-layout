@@ -73,8 +73,8 @@ The implemented exact fragment currently includes:
   typed artifact/document pipeline
 - a typed exact-fixture corpus with constructor-backed fixture identifiers and
   canonical exact row / padded leaf / framed leaf / nested-frame-row fixtures
-  that package the public artifact/render helpers for future backend-fidelity
-  work
+  that package an end-to-end exact projection wrapper (checked/certified/
+  contract/artifact/document/rendered outputs) for future backend-fidelity work
 - a small typed export/manifest layer that projects canonical exact fixture ids to
   stable output-boundary slugs/file names and packages rendered-document /
   rendered-page outputs into manifest entries without adding IO or an external
@@ -116,6 +116,9 @@ The current Lean development already contains proofs/examples for:
 - rendered-output bridge theorems showing successful exact rendered-document /
   HTML / CSS / standalone-page helpers still recover the backend artifact/
   document provenance they came from
+- an `ExactProjection` wrapper that bundles successful exact checks into a single
+  typed end-to-end view spanning checked/certified data, contracts, backend
+  artifacts, typed documents, and rendered outputs
 - exact-document structural theorems showing generated stylesheet class names are
   nodup, body-tree class references are covered by stylesheet rules, and exact
   lowering keeps the document rooted at an unstyled single-child body

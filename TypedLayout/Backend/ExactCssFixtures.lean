@@ -1,4 +1,4 @@
-import TypedLayout.Backend.ExactCssRender
+import TypedLayout.Backend.ExactCssProjection
 import TypedLayout.Core.Examples
 
 namespace TypedLayout.Backend.ExactCssFixtures
@@ -32,21 +32,36 @@ end FixtureId
 
 /-- Canonical backend fixture for the current exact fragment.
 
-The fixture stores the source-side input pair together with the exact backend
-artifact witness produced by the public exact-check helper. This keeps the corpus
-typed through the artifact/document/rendered-page pipeline without introducing a
-stringly registry layer. -/
+The fixture stores the source-side input pair together with the end-to-end exact
+projection witness produced by the public exact-check helper. This keeps the
+corpus typed through certification, contract synthesis, backend lowering,
+document projection, and rendered output recovery without introducing a stringly
+registry layer. -/
 structure Fixture where
   id : FixtureId
   available : AvailableSpace
   layout : Layout
-  artifact : Artifact
-  artifactExact : checkArtifact available layout = .exact artifact
+  projection : ExactProjection available layout
 
 namespace Fixture
 
+def checked (fixture : Fixture) : CheckedWithin fixture.available :=
+  fixture.projection.checked
+
+def certified (fixture : Fixture) : CertifiedWithin fixture.available :=
+  fixture.projection.certified
+
+def summary (fixture : Fixture) : ExactLayoutSummary :=
+  fixture.projection.summary
+
+def contract (fixture : Fixture) : ExactLayoutContract :=
+  fixture.projection.contract
+
+def artifact (fixture : Fixture) : Artifact :=
+  fixture.projection.artifact
+
 def artifactResult (fixture : Fixture) : CheckResult Artifact :=
-  checkArtifact fixture.available fixture.layout
+  fixture.projection.artifactResult
 
 def document (fixture : Fixture) : ExactDocument.Document :=
   fixture.artifact.document
@@ -67,60 +82,71 @@ def renderPage (fixture : Fixture) : String :=
   fixture.artifact.renderPage
 
 def renderedDocumentResult (fixture : Fixture) : CheckResult ExactDocument.RenderedDocument :=
-  checkRenderedDocument fixture.available fixture.layout
+  fixture.projection.renderedDocumentResult
 
 def renderedPageResult (fixture : Fixture) : CheckResult ExactDocument.RenderedPage :=
-  checkRenderedPage fixture.available fixture.layout
+  fixture.projection.renderedPageResult
 
 def renderHtmlResult (fixture : Fixture) : CheckResult String :=
-  checkRenderHtml fixture.available fixture.layout
+  fixture.projection.renderHtmlResult
 
 def renderCssResult (fixture : Fixture) : CheckResult String :=
-  checkRenderCss fixture.available fixture.layout
+  fixture.projection.renderCssResult
 
 def renderPageResult (fixture : Fixture) : CheckResult String :=
-  checkRenderPage fixture.available fixture.layout
+  fixture.projection.renderPageResult
 
 theorem artifactResult_exact (fixture : Fixture) :
     fixture.artifactResult = .exact fixture.artifact :=
-  fixture.artifactExact
+  fixture.projection.artifactResult_exact
 
 theorem targetProfile_exact1D_v1 (fixture : Fixture) :
     fixture.artifact.targetProfile = .exact1D_v1 :=
-  checkArtifact_exact_targetProfile fixture.artifactExact
+  fixture.projection.artifact_targetProfile_exact1D_v1
 
 theorem sourceGuarantee_exact (fixture : Fixture) :
     fixture.artifact.sourceGuarantee = .exact :=
-  checkArtifact_exact_sourceGuarantee fixture.artifactExact
+  fixture.projection.artifact_sourceGuarantee_exact
 
 theorem outputBounds_within_inputBounds (fixture : Fixture) :
     fixture.artifact.inputBounds.containsBounds fixture.artifact.outputBounds :=
-  checkArtifact_exact_outputBounds_within_inputBounds fixture.artifactExact
+  fixture.projection.artifact_outputBounds_within_inputBounds
+
+theorem contract_guarantee_exact (fixture : Fixture) :
+    fixture.contract.guarantee = .exact :=
+  fixture.projection.contract_guarantee
+
+theorem artifact_sourceGuarantee_eq_contract_guarantee (fixture : Fixture) :
+    fixture.artifact.sourceGuarantee = fixture.contract.guarantee :=
+  fixture.projection.artifact_sourceGuarantee_eq_contract_guarantee
+
+theorem renderedDocument_eq_document_render (fixture : Fixture) :
+    fixture.renderedDocument = fixture.document.render :=
+  fixture.projection.renderedDocument_eq_document_render
+
+theorem renderedPage_eq_document_renderPage (fixture : Fixture) :
+    fixture.renderedPage = fixture.document.renderPage :=
+  fixture.projection.renderedPage_eq_document_renderPage
 
 theorem renderedDocumentResult_exact (fixture : Fixture) :
     fixture.renderedDocumentResult = .exact fixture.renderedDocument := by
-  simp [renderedDocumentResult, renderedDocument, checkRenderedDocument,
-    CheckResult.map, fixture.artifactExact]
+  exact fixture.projection.renderedDocumentResult_exact
 
 theorem renderedPageResult_exact (fixture : Fixture) :
     fixture.renderedPageResult = .exact fixture.renderedPage := by
-  simp [renderedPageResult, renderedPage, checkRenderedPage,
-    CheckResult.map, fixture.artifactExact]
+  exact fixture.projection.renderedPageResult_exact
 
 theorem renderHtmlResult_exact (fixture : Fixture) :
     fixture.renderHtmlResult = .exact fixture.renderHtml := by
-  simp [renderHtmlResult, renderHtml, checkRenderHtml,
-    CheckResult.map, fixture.artifactExact]
+  exact fixture.projection.renderHtmlResult_exact
 
 theorem renderCssResult_exact (fixture : Fixture) :
     fixture.renderCssResult = .exact fixture.renderCss := by
-  simp [renderCssResult, renderCss, checkRenderCss,
-    CheckResult.map, fixture.artifactExact]
+  exact fixture.projection.renderCssResult_exact
 
 theorem renderPageResult_exact (fixture : Fixture) :
     fixture.renderPageResult = .exact fixture.renderPage := by
-  simp [renderPageResult, renderPage, checkRenderPage,
-    CheckResult.map, fixture.artifactExact]
+  exact fixture.projection.renderPageResult_exact
 
 theorem document_ruleClassNamesNodup (fixture : Fixture) :
     fixture.document.ruleClassNamesNodup := by
@@ -144,33 +170,50 @@ def fixture : FixtureId → Fixture
       { id := .exactRow
       , available := exactRowAvailable
       , layout := exactRowLayout
-      , artifact := Artifact.ofCertifiedWithin exactRowCertified
-      , artifactExact := by
-          native_decide
+      , projection :=
+          match h : check exactRowAvailable exactRowLayout with
+          | .exact checked => ExactProjection.ofCheck h
+          | .incompatible error =>
+              False.elim <| by
+                have hExact := exactRowCheckGuarantee
+                simp [CheckResult.isExact, h] at hExact
       }
   | .paddedLeaf =>
       { id := .paddedLeaf
       , available := paddedLeafAvailable
       , layout := paddedLeafLayout
-      , artifact := Artifact.ofCertifiedWithin paddedLeafCertified
-      , artifactExact := by
-          native_decide
+      , projection :=
+          match h : check paddedLeafAvailable paddedLeafLayout with
+          | .exact checked => ExactProjection.ofCheck h
+          | .incompatible error =>
+              False.elim <| by
+                have hExact := paddedLeafCheckGuarantee
+                simp [CheckResult.isExact, h] at hExact
       }
   | .framedLeaf =>
       { id := .framedLeaf
       , available := framedLeafAvailable
       , layout := framedLeafLayout
-      , artifact := Artifact.ofCertifiedWithin framedLeafCertified
-      , artifactExact := by
-          native_decide
+      , projection :=
+          match h : check framedLeafAvailable framedLeafLayout with
+          | .exact checked => ExactProjection.ofCheck h
+          | .incompatible error =>
+              False.elim <| by
+                have hExact : (check framedLeafAvailable framedLeafLayout).isExact = true := by
+                  simpa [framedLeafAvailable] using framedLeafCheckGuarantee
+                simp [CheckResult.isExact, h] at hExact
       }
   | .nestedFrameRow =>
       { id := .nestedFrameRow
       , available := nestedFrameRowAvailable
       , layout := nestedFrameRowLayout
-      , artifact := Artifact.ofCertifiedWithin nestedFrameRowCertified
-      , artifactExact := by
-          native_decide
+      , projection :=
+          match h : check nestedFrameRowAvailable nestedFrameRowLayout with
+          | .exact checked => ExactProjection.ofCheck h
+          | .incompatible error =>
+              False.elim <| by
+                have hExact := nestedFrameRowCheckExactAtAvailable
+                simp [CheckResult.isExact, h] at hExact
       }
 
 /-- The current canonical exact backend fixture corpus. -/
@@ -197,6 +240,14 @@ theorem exactRowFixture_targetProfile :
     exactRowFixture.artifact.targetProfile = .exact1D_v1 := by
   exact Fixture.targetProfile_exact1D_v1 exactRowFixture
 
+theorem exactRowFixture_contract_guarantee :
+    exactRowFixture.contract.guarantee = .exact := by
+  exact Fixture.contract_guarantee_exact exactRowFixture
+
+theorem exactRowFixture_artifact_sourceGuarantee_eq_contract_guarantee :
+    exactRowFixture.artifact.sourceGuarantee = exactRowFixture.contract.guarantee := by
+  exact Fixture.artifact_sourceGuarantee_eq_contract_guarantee exactRowFixture
+
 theorem exactRowFixture_document_ruleClassNamesNodup :
     exactRowFixture.document.ruleClassNamesNodup := by
   exact Fixture.document_ruleClassNamesNodup exactRowFixture
@@ -212,6 +263,10 @@ theorem framedLeafFixture_renderedPageResult_exact :
 theorem framedLeafFixture_document_singleRootBody :
     framedLeafFixture.document.singleRootBody := by
   exact Fixture.document_singleRootBody framedLeafFixture
+
+theorem framedLeafFixture_renderedPage_eq_document_renderPage :
+    framedLeafFixture.renderedPage = framedLeafFixture.document.renderPage := by
+  exact Fixture.renderedPage_eq_document_renderPage framedLeafFixture
 
 theorem nestedFrameRowFixture_outputBounds_within_inputBounds :
     nestedFrameRowFixture.artifact.inputBounds.containsBounds
