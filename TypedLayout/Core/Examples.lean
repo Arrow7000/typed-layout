@@ -1,4 +1,4 @@
-import TypedLayout.Core.Properties
+import TypedLayout.Core.Certified
 
 namespace TypedLayout.Core.Examples
 
@@ -83,6 +83,26 @@ theorem exactRowLocalWitness :
 theorem exactRowLocalSound :
     CheckedLayout.LocalSound exactRowCheckedLayout := by
   exact CheckedLayout.localWitness?_sound exactRowCheckedLayout exactRowLocalWitness
+
+def exactRowCertified : CertifiedWithin exactRowAvailable :=
+  match h : check exactRowAvailable exactRowLayout with
+  | .exact checked => CertifiedWithin.ofCheck h
+  | .incompatible error =>
+      False.elim <| by
+        have hExact := exactRowCheckGuarantee
+        simp [CheckResult.isExact, h] at hExact
+
+theorem exactRowCertifiedFits :
+    exactRowCertified.layout.extent.fitsWithin exactRowAvailable.extent :=
+  exactRowCertified.fits
+
+theorem exactRowCertifiedLocalSound :
+    CheckedLayout.LocalSound exactRowCertified.layout :=
+  exactRowCertified.localSound
+
+theorem exactRowCertifiedLocalWitness :
+    exactRowCertified.layout.localWitness? = true :=
+  exactRowCertified.localWitness
 
 def tooWideRowLayout : Layout :=
   .row { amount := 10 }

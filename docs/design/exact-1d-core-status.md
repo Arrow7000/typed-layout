@@ -12,6 +12,7 @@ This note records what the current Lean core actually covers right now.
 - `TypedLayout/Core/Check.lean`
 - `TypedLayout/Core/Eval.lean`
 - `TypedLayout/Core/Properties.lean`
+- `TypedLayout/Core/Certified.lean`
 - `TypedLayout/Core/Examples.lean`
 
 ## Current implemented fragment
@@ -29,6 +30,8 @@ The implemented exact fragment currently includes:
 - frames
 - total extent synthesis for checked layouts
 - a checker returning `CheckedWithin available`
+- an opt-in `CertifiedWithin available` success certificate bundling fit evidence,
+  propositional local soundness, and executable local witness truth
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -67,9 +70,11 @@ Important boundaries of the current implementation:
 1. **This is still the exact box core.**
    No text, no intrinsic sizing, no flex, no grid, no wrapping.
 
-2. **`CheckedWithin` is the current proof-carrying checker boundary.**
-   The core does not yet fully index the checked AST by every semantic fact, but
-   it does carry fit evidence at the result boundary.
+2. **`CheckedWithin` remains the checker boundary, with an opt-in certified
+   success layer.**
+   `check` still returns `CheckedWithin available`, while
+   `CertifiedWithin available` gives consumers a small proof-carrying wrapper for
+   successful exact checks without globally changing the checker result shape.
 
 3. **The geometry tree is box-oriented.**
    Origin and extent travel together as a `Box` rather than as loosely related
