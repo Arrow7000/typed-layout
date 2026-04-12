@@ -65,9 +65,24 @@ theorem exactRowChildrenFitWithin :
     exactRowCheckedLayout.evaluate.immediateChildrenFitWithin? = true := by
   native_decide
 
+theorem exactRowChildrenFitWithinProp :
+    ImmediateChildrenFitWithin exactRowCheckedLayout.evaluate := by
+  simpa [CheckedLayout.evaluate, exactRowCheckedLayout] using
+    CheckedLayout.evaluateAt_row_immediateChildrenFitWithin
+      { amount := 10 }
+      [ .leaf { width := 100, height := 20 }
+      , .leaf { width := 150, height := 30 }
+      , .leaf { width := 200, height := 25 }
+      ]
+      Origin.zero
+
 theorem exactRowLocalWitness :
     exactRowCheckedLayout.localWitness? = true := by
   native_decide
+
+theorem exactRowLocalSound :
+    CheckedLayout.LocalSound exactRowCheckedLayout := by
+  exact CheckedLayout.localWitness?_sound exactRowCheckedLayout exactRowLocalWitness
 
 def tooWideRowLayout : Layout :=
   .row { amount := 10 }
@@ -129,9 +144,24 @@ theorem exactColumnChildrenFitWithin :
     exactColumnCheckedLayout.evaluate.immediateChildrenFitWithin? = true := by
   native_decide
 
+theorem exactColumnChildrenFitWithinProp :
+    ImmediateChildrenFitWithin exactColumnCheckedLayout.evaluate := by
+  simpa [CheckedLayout.evaluate, exactColumnCheckedLayout] using
+    CheckedLayout.evaluateAt_column_immediateChildrenFitWithin
+      { amount := 5 }
+      [ .leaf { width := 30, height := 20 }
+      , .leaf { width := 40, height := 30 }
+      , .leaf { width := 35, height := 10 }
+      ]
+      Origin.zero
+
 theorem exactColumnLocalWitness :
     exactColumnCheckedLayout.localWitness? = true := by
   native_decide
+
+theorem exactColumnLocalSound :
+    CheckedLayout.LocalSound exactColumnCheckedLayout := by
+  exact CheckedLayout.localWitness?_sound exactColumnCheckedLayout exactColumnLocalWitness
 
 def paddedLeafCheckedLayout : CheckedLayout :=
   .padding { left := 2, top := 1, right := 3, bottom := 1 }
@@ -269,5 +299,9 @@ theorem nestedFrameRowPaddingChildFits :
 theorem nestedFrameRowLocalWitness :
     nestedFrameRowCheckedLayout.localWitness? = true := by
   native_decide
+
+theorem nestedFrameRowLocalSound :
+    CheckedLayout.LocalSound nestedFrameRowCheckedLayout := by
+  exact CheckedLayout.localWitness?_sound nestedFrameRowCheckedLayout nestedFrameRowLocalWitness
 
 end TypedLayout.Core.Examples

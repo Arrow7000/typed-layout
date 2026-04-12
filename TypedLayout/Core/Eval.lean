@@ -82,6 +82,25 @@ def adjacentSeparatedAlong? (axis : Axis) (gap : Gap) : List GeometryTree → Bo
       decide (first.box.separatedByAtLeastAlong axis gap.amount second.box) &&
         adjacentSeparatedAlong? axis gap (second :: rest)
 
+theorem adjacentSeparatedAlong?_sound
+    (axis : Axis)
+    (gap : Gap)
+    (children : List GeometryTree) :
+    adjacentSeparatedAlong? axis gap children = true → AdjacentSeparatedAlong axis gap children := by
+  induction children with
+  | nil =>
+      intro _
+      simp [AdjacentSeparatedAlong]
+  | cons first rest ih =>
+      cases rest with
+      | nil =>
+          intro _
+          simp [AdjacentSeparatedAlong]
+      | cons second tail =>
+          intro h
+          simp only [adjacentSeparatedAlong?, AdjacentSeparatedAlong, Bool.and_eq_true] at h ⊢
+          exact ⟨of_decide_eq_true h.1, ih h.2⟩
+
 namespace CheckedLayout
 
 mutual

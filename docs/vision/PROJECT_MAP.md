@@ -141,12 +141,14 @@ The intended order of work is:
 We already have:
 
 - generic row/column separation
+- generic row/column containment
 - generic wrapper containment for padding/frame
 - executable local witnesses for concrete exact layouts
+- soundness theorems bridging local witnesses back to propositions
 
 The main remaining frontier is:
 
-- **generic row/column containment**
+- **how much to strengthen the checked/proof boundary before the guarantee model grows further**
 
 ### Phase 3 — guarantee lattice and backend profile
 

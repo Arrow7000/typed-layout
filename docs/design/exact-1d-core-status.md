@@ -43,12 +43,13 @@ The current Lean development already contains proofs/examples for:
 - full concrete geometry equality for nested exact layouts
 - generic row adjacency/separation
 - generic column adjacency/separation
+- generic row child containment
+- generic column child containment
 - executable boolean checks for adjacency/separation
 - executable per-layout local witness checks (`CheckedLayout.localWitness?`)
+- soundness bridges from executable local witnesses back to propositional local facts
 - generic padding child containment
 - generic framed-leaf child containment when a fit proof is supplied
-- concrete row child containment checks via `immediateChildrenFitWithin?`
-- concrete column child containment checks via `immediateChildrenFitWithin?`
 - incompatible layouts surfacing the expected checker error shape
 
 The checker/result layer also now exposes small boolean projections that are handy
@@ -72,16 +73,16 @@ Important boundaries of the current implementation:
    Origin and extent travel together as a `Box` rather than as loosely related
    fields.
 
-4. **The local proof story is currently asymmetric.**
-   Wrapper containment is proved generically today; stacked-layout containment is
-   currently represented by concrete executable examples plus generic separation
-   lemmas.
+4. **The local proof story now has a real executable/propositional bridge.**
+   Rows/columns have generic separation and immediate-containment theorems,
+   padding/frame have generic containment theorems, and executable local witness
+   checks now come with soundness theorems back into propositions.
 
 ## What is still missing before CSS work
 
 Before any serious CSS lowering, the next desirable semantic work is still:
 
-- generic containment properties for stacking layouts
+- a cleaner checked/proof boundary if the guarantee story keeps growing
 - clearer alignment between exact guarantees and future `conditional(profile)`
   guarantees
 - a crisper backend mapping note for row/column/padding/frame
