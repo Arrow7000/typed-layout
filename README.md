@@ -47,6 +47,7 @@ before any implementation starts.
 - `docs/plans/2026-04-11-research-roadmap.md`
 - `docs/plans/2026-04-11-phase-1-exact-1d-core-plan.md`
 - `docs/plans/2026-04-12-tranche-2-plan.md`
+- `docs/plans/2026-04-13-tranche-3-plan.md`
 
 ## Provisional stance
 
