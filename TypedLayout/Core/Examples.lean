@@ -57,6 +57,10 @@ theorem exactRowChildrenSeparated :
       , .leaf { width := 200, height := 25 }
       ]
 
+theorem exactRowChildrenSeparatedBool :
+    adjacentSeparatedAlong? .horizontal { amount := 10 } exactRowCheckedLayout.evaluate.children = true := by
+  native_decide
+
 theorem exactRowChildrenFitWithin :
     exactRowCheckedLayout.evaluate.immediateChildrenFitWithin? = true := by
   native_decide
@@ -112,6 +116,10 @@ theorem exactColumnChildrenSeparated :
       , .leaf { width := 35, height := 10 }
       ]
       Origin.zero
+
+theorem exactColumnChildrenSeparatedBool :
+    adjacentSeparatedAlong? .vertical { amount := 5 } exactColumnCheckedLayout.evaluate.children = true := by
+  native_decide
 
 theorem exactColumnChildrenFitWithin :
     exactColumnCheckedLayout.evaluate.immediateChildrenFitWithin? = true := by

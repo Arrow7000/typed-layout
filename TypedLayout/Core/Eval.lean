@@ -75,6 +75,13 @@ def AdjacentSeparatedAlong (axis : Axis) (gap : Gap) : List GeometryTree → Pro
       first.box.separatedByAtLeastAlong axis gap.amount second.box ∧
         AdjacentSeparatedAlong axis gap (second :: rest)
 
+def adjacentSeparatedAlong? (axis : Axis) (gap : Gap) : List GeometryTree → Bool
+  | [] => true
+  | [_] => true
+  | first :: second :: rest =>
+      decide (first.box.separatedByAtLeastAlong axis gap.amount second.box) &&
+        adjacentSeparatedAlong? axis gap (second :: rest)
+
 namespace CheckedLayout
 
 mutual

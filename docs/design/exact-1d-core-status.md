@@ -43,6 +43,7 @@ The current Lean development already contains proofs/examples for:
 - full concrete geometry equality for nested exact layouts
 - generic row adjacency/separation
 - generic column adjacency/separation
+- executable boolean checks for adjacency/separation
 - generic padding child containment
 - generic framed-leaf child containment when a fit proof is supplied
 - concrete row child containment checks via `immediateChildrenFitWithin?`
