@@ -35,6 +35,7 @@ before any implementation starts.
 - `docs/vision/WORKING_CHARTER.md`
 - `docs/vision/FOUNDING_DECISIONS.md`
 - `docs/vision/ENGINEERING_PRINCIPLES.md`
+- `docs/vision/PROJECT_MAP.md`
 - `docs/research/prior-art-and-theory.md`
 - `docs/research/text-strategy-and-pretext.md`
 - `docs/design/core-representation-sketch.md`
