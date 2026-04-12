@@ -107,6 +107,9 @@ def exactRowCertified : CertifiedWithin exactRowAvailable :=
         have hExact := exactRowCheckGuarantee
         simp [CheckResult.isExact, h] at hExact
 
+def exactRowLocal : CertifiedLocalLayout :=
+  exactRowCertified.toLocal
+
 theorem exactRowCertifiedFits :
     exactRowCertified.layout.extent.fitsWithin exactRowAvailable.extent :=
   exactRowCertified.fits
@@ -118,6 +121,14 @@ theorem exactRowCertifiedLocalSound :
 theorem exactRowCertifiedLocalWitness :
     exactRowCertified.layout.localWitness? = true :=
   exactRowCertified.localWitness
+
+theorem exactRowLocalChildExtents :
+    exactRowLocal.children.map (fun child => child.layout.extent) =
+      [ { width := 100, height := 20 }
+      , { width := 150, height := 30 }
+      , { width := 200, height := 25 }
+      ] := by
+  native_decide
 
 def exactRowSummary : ExactLayoutSummary :=
   exactRowCheckedLayout.summary
@@ -495,5 +506,42 @@ theorem nestedFrameRowLocalWitness :
 theorem nestedFrameRowLocalSound :
     CheckedLayout.LocalSound nestedFrameRowCheckedLayout := by
   exact CheckedLayout.localWitness?_sound nestedFrameRowCheckedLayout nestedFrameRowLocalWitness
+
+def nestedFrameRowAvailable : AvailableSpace :=
+  { extent := { width := 200, height := 80 } }
+
+theorem nestedFrameRowCheckExactAtAvailable :
+    (check nestedFrameRowAvailable nestedFrameRowLayout).isExact = true := by
+  simpa [nestedFrameRowAvailable] using nestedFrameRowCheckExact
+
+def nestedFrameRowCertified : CertifiedWithin nestedFrameRowAvailable :=
+  match h : check nestedFrameRowAvailable nestedFrameRowLayout with
+  | .exact checked => CertifiedWithin.ofCheck h
+  | .incompatible error =>
+      False.elim <| by
+        have hExact := nestedFrameRowCheckExactAtAvailable
+        simp [CheckResult.isExact, h] at hExact
+
+def nestedFrameRowLocal : CertifiedLocalLayout :=
+  nestedFrameRowCertified.toLocal
+
+theorem nestedFrameRowLocalChildKinds :
+    nestedFrameRowLocal.children.map (fun child => child.layout.kind) = [ .padding ] := by
+  native_decide
+
+theorem nestedFrameRowLocalGrandchildKinds :
+    nestedFrameRowLocal.children.map
+      (fun child => child.children.map (fun grandchild => grandchild.layout.kind)) =
+      [[ .row ]] := by
+  native_decide
+
+theorem nestedFrameRowLocalLeafExtents :
+    nestedFrameRowLocal.children.map
+      (fun child =>
+        child.children.map
+          (fun grandchild =>
+            grandchild.children.map (fun leaf => leaf.layout.extent))) =
+      [[[ { width := 60, height := 20 }, { width := 40, height := 30 } ]]] := by
+  native_decide
 
 end TypedLayout.Core.Examples

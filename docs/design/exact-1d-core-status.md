@@ -36,6 +36,8 @@ The implemented exact fragment currently includes:
 - a checker returning `CheckedWithin available`
 - an opt-in `CertifiedWithin available` success certificate bundling fit evidence,
   propositional local soundness, and executable local witness truth
+- a `CertifiedLocalLayout` wrapper for locally-sound checked layouts, with
+  recursive certified-child recovery for nested exact layouts
 - a first public exact-fragment summary layer exposing exact guarantee class,
   exact extents, singleton bounded views, and typed local-invariant inventories
   for checked layouts
@@ -63,6 +65,8 @@ The current Lean development already contains proofs/examples for:
 - soundness/completeness bridges for the main local executable booleans
 - soundness bridges from executable local witnesses back to propositional local facts
 - checker-to-witness bridges showing successful exact checks produce locally-sound checked layouts and `localWitness? = true`
+- locally certified child access for nested checked row/column/padding/frame
+  layouts
 - public exact-fragment summaries synthesized from `CheckedLayout` and
   `CertifiedWithin`
 - exact-fragment contracts synthesized from `CertifiedWithin`, with examples
@@ -88,11 +92,13 @@ Important boundaries of the current implementation:
 1. **This is still the exact box core.**
    No text, no intrinsic sizing, no flex, no grid, no wrapping.
 
-2. **`CheckedWithin` remains the checker boundary, with an opt-in certified
-   success layer.**
+2. **`CheckedWithin` remains the checker boundary, with opt-in certified
+   success layers.**
    `check` still returns `CheckedWithin available`, while
    `CertifiedWithin available` gives consumers a small proof-carrying wrapper for
-   successful exact checks without globally changing the checker result shape.
+   successful exact checks without globally changing the checker result shape,
+   and `CertifiedLocalLayout` lets that local certification story continue down
+   through nested checked children.
 
 3. **The geometry tree is box-oriented.**
    Origin and extent travel together as a `Box` rather than as loosely related
