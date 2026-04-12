@@ -79,6 +79,9 @@ The implemented exact fragment currently includes:
   stable output-boundary slugs/file names and packages rendered-document /
   rendered-page outputs into manifest entries without adding IO or an external
   harness
+- a pure typed file-plan layer that expands each manifest entry to intended
+  document / stylesheet / standalone-page files and contents for future export
+  harnessing, still without performing any writes
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -121,6 +124,9 @@ The current Lean development already contains proofs/examples for:
 - a typed manifest/export layer showing the canonical exact fixtures can be
   collected with stable slugs/file names while preserving rendered-page
   provenance back to the exact fixture corpus
+- a typed file-plan layer showing each manifest entry expands to the expected
+  three intended output files, with filename/content correspondence staying at
+  the export boundary
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
 - bridges showing the exposed summary invariants are backed by `LocalSound`
