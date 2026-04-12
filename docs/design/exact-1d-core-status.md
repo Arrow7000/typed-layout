@@ -18,6 +18,7 @@ This note records what the current Lean core actually covers right now.
 - `TypedLayout/Core/Examples.lean`
 - `TypedLayout/Backend/ExactCss.lean`
 - `TypedLayout/Backend/ExactCssRender.lean`
+- `TypedLayout/Backend/ExactCssFixtures.lean`
 - `TypedLayout/Backend/ExactCssExamples.lean`
 
 ## Current implemented fragment
@@ -66,6 +67,10 @@ The implemented exact fragment currently includes:
   `checkWithinRenderedPage` / `checkRenderedPage` and
   `checkWithinRenderPage` / `checkRenderPage` helpers still routed through the
   typed artifact/document pipeline
+- a typed exact-fixture corpus with constructor-backed fixture identifiers and
+  canonical exact row / padded leaf / framed leaf / nested-frame-row fixtures
+  that package the public artifact/render helpers for future backend-fidelity
+  work
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -100,6 +105,8 @@ The current Lean development already contains proofs/examples for:
 - rendered-output bridge theorems showing successful exact rendered-document /
   HTML / CSS / standalone-page helpers still recover the backend artifact/
   document provenance they came from
+- a canonical typed backend fixture layer that keeps a small exact-example corpus
+  available through typed identifiers instead of loose ad-hoc example selection
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
 - bridges showing the exposed summary invariants are backed by `LocalSound`

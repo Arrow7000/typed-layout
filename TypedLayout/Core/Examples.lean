@@ -317,9 +317,32 @@ theorem exactColumnLocalSound :
     CheckedLayout.LocalSound exactColumnCheckedLayout := by
   exact CheckedLayout.localWitness?_sound exactColumnCheckedLayout exactColumnLocalWitness
 
+def paddedLeafLayout : Layout :=
+  .padding { left := 2, top := 1, right := 3, bottom := 1 }
+    (.leaf { width := 10, height := 5 })
+
 def paddedLeafCheckedLayout : CheckedLayout :=
   .padding { left := 2, top := 1, right := 3, bottom := 1 }
     (.leaf { width := 10, height := 5 })
+
+theorem paddedLeafExtent :
+    paddedLeafCheckedLayout.extent = { width := 15, height := 7 } := by
+  native_decide
+
+def paddedLeafAvailable : AvailableSpace :=
+  { extent := { width := 15, height := 7 } }
+
+theorem paddedLeafCheckGuarantee :
+    (check paddedLeafAvailable paddedLeafLayout).isExact = true := by
+  native_decide
+
+def paddedLeafCertified : CertifiedWithin paddedLeafAvailable :=
+  match h : check paddedLeafAvailable paddedLeafLayout with
+  | .exact checked => CertifiedWithin.ofCheck h
+  | .incompatible error =>
+      False.elim <| by
+        have hExact := paddedLeafCheckGuarantee
+        simp [CheckResult.isExact, h] at hExact
 
 theorem paddedLeafChildFitsWithin :
     ImmediateChildrenFitWithin paddedLeafCheckedLayout.evaluate := by

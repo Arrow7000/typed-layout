@@ -10,4 +10,5 @@ import TypedLayout.Core.Contract
 import TypedLayout.Core.Examples
 import TypedLayout.Backend.ExactCss
 import TypedLayout.Backend.ExactCssRender
+import TypedLayout.Backend.ExactCssFixtures
 import TypedLayout.Backend.ExactCssExamples
