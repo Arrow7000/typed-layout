@@ -94,8 +94,31 @@ theorem exactRowArtifactMetadata :
       , sourceGuarantee := .exact
       , inputBounds := exactRowAvailable.bounds
       , outputBounds := exactRowExpectedExtent.toBounds
-      , root := exactRowNode
-      } := by
+       , root := exactRowNode
+       } := by
   native_decide
+
+theorem exactRowCheckWithinArtifactExact :
+    checkWithinArtifact exactRowAvailable exactRowLayout = .exact exactRowArtifact := by
+  native_decide
+
+theorem exactRowCheckArtifactExact :
+    checkArtifact exactRowAvailable exactRowLayout = .exact exactRowArtifact := by
+  native_decide
+
+theorem exactRowArtifactOutputBoundsWithinInputBounds :
+    exactRowArtifact.inputBounds.containsBounds exactRowArtifact.outputBounds := by
+  simpa [exactRowArtifact] using
+    Artifact.ofCertifiedWithin_outputBounds_within_inputBounds exactRowCertified
+
+theorem exactRowArtifactRecoveredFromChecked :
+    ∃ checked : CheckedWithin exactRowAvailable,
+      Artifact.ofCheckedWithin checked = exactRowArtifact ∧
+      exactRowArtifact.root.style.size = Size.ofExtent checked.extent := by
+  refine ⟨exactRowCertified.checked, ?_, ?_⟩
+  · simpa [exactRowArtifact] using
+      (Artifact.ofCertifiedWithin_eq_ofCheckedWithin exactRowCertified).symm
+  · simpa [exactRowArtifact] using
+      Artifact.ofCheckedWithin_root_size exactRowCertified.checked
 
 end TypedLayout.Backend.ExactCssExamples

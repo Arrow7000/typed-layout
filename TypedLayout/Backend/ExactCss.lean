@@ -333,6 +333,37 @@ def ofCheckedWithin {available : AvailableSpace}
   , root := Node.ofCheckedLayout checked.layout
   }
 
+theorem ofCheckedWithin_targetProfile {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).targetProfile = .exact1D_v1 :=
+  rfl
+
+theorem ofCheckedWithin_sourceKind {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).sourceKind = checked.layout.kind :=
+  rfl
+
+theorem ofCheckedWithin_sourceGuarantee_exact {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).sourceGuarantee = .exact :=
+  rfl
+
+theorem ofCheckedWithin_inputBounds {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).inputBounds = available.bounds :=
+  rfl
+
+theorem ofCheckedWithin_outputBounds {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).outputBounds = checked.extentBounds :=
+  rfl
+
+theorem ofCheckedWithin_outputBounds_within_inputBounds {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).inputBounds.containsBounds
+      (ofCheckedWithin checked).outputBounds := by
+  simpa [ofCheckedWithin] using checked.extentBounds_within_availableBounds
+
 def ofCertifiedWithin {available : AvailableSpace}
     (certified : CertifiedWithin available) : Artifact :=
   { targetProfile := .exact1D_v1
@@ -342,6 +373,34 @@ def ofCertifiedWithin {available : AvailableSpace}
   , outputBounds := certified.contract.output.bounds
   , root := Node.ofCheckedLayout certified.layout
   }
+
+theorem ofCertifiedWithin_eq_ofCheckedWithin {available : AvailableSpace}
+    (certified : CertifiedWithin available) :
+    ofCertifiedWithin certified = ofCheckedWithin certified.checked := by
+  cases certified
+  rfl
+
+theorem ofCheckedWithin_root_matches_sourceKind {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).root.kind = (ofCheckedWithin checked).sourceKind := by
+  simp [ofCheckedWithin, Node.ofCheckedLayout_kind]
+
+theorem ofCertifiedWithin_targetProfile {available : AvailableSpace}
+    (certified : CertifiedWithin available) :
+    (ofCertifiedWithin certified).targetProfile = .exact1D_v1 :=
+  rfl
+
+theorem ofCertifiedWithin_sourceKind {available : AvailableSpace}
+    (certified : CertifiedWithin available) :
+    (ofCertifiedWithin certified).sourceKind = certified.layout.kind := by
+  simpa [ofCertifiedWithin, CertifiedWithin.contract] using
+    ExactLayoutContract.ofCertifiedWithin_kind certified
+
+theorem ofCertifiedWithin_inputBounds {available : AvailableSpace}
+    (certified : CertifiedWithin available) :
+    (ofCertifiedWithin certified).inputBounds = available.bounds := by
+  simpa [ofCertifiedWithin, CertifiedWithin.contract] using
+    ExactLayoutContract.ofCertifiedWithin_input_bounds certified
 
 theorem ofCheckedWithin_root_kind {available : AvailableSpace}
     (checked : CheckedWithin available) :
@@ -363,16 +422,206 @@ theorem ofCertifiedWithin_sourceGuarantee {available : AvailableSpace}
     (ofCertifiedWithin certified).sourceGuarantee = certified.contract.guarantee := by
   rfl
 
+theorem ofCertifiedWithin_sourceGuarantee_exact {available : AvailableSpace}
+    (certified : CertifiedWithin available) :
+    (ofCertifiedWithin certified).sourceGuarantee = .exact := by
+  rw [ofCertifiedWithin_sourceGuarantee]
+  exact certified.contract_guarantee
+
 theorem ofCertifiedWithin_outputBounds {available : AvailableSpace}
     (certified : CertifiedWithin available) :
     (ofCertifiedWithin certified).outputBounds = certified.contract.output.bounds := by
   rfl
+
+theorem ofCertifiedWithin_outputBounds_within_inputBounds {available : AvailableSpace}
+    (certified : CertifiedWithin available) :
+    (ofCertifiedWithin certified).inputBounds.containsBounds
+      (ofCertifiedWithin certified).outputBounds := by
+  simpa [ofCertifiedWithin] using
+    certified.contract_output_bounds_within_input_bounds
 
 theorem ofCertifiedWithin_root_size {available : AvailableSpace}
     (certified : CertifiedWithin available) :
     (ofCertifiedWithin certified).root.style.size = Size.ofExtent certified.extent := by
   simpa [CertifiedWithin.extent, ofCertifiedWithin] using Node.ofCheckedLayout_size certified.layout
 
+theorem ofCertifiedWithin_root_matches_sourceKind {available : AvailableSpace}
+    (certified : CertifiedWithin available) :
+    (ofCertifiedWithin certified).root.kind = (ofCertifiedWithin certified).sourceKind := by
+  simp [ofCertifiedWithin_root_kind certified, ofCertifiedWithin_sourceKind certified]
+
 end Artifact
+
+def checkWithinArtifact (available : AvailableSpace) (layout : Layout) :
+    CheckResult Artifact :=
+  (checkWithinCertified available layout).map Artifact.ofCertifiedWithin
+
+def checkArtifact (available : AvailableSpace) (layout : Layout) :
+    CheckResult Artifact :=
+  (checkCertified available layout).map Artifact.ofCertifiedWithin
+
+theorem checkWithinArtifact_exact_certified
+    {available : AvailableSpace}
+    {layout : Layout}
+    {artifact : Artifact}
+    (h : checkWithinArtifact available layout = .exact artifact) :
+    ∃ certified : CertifiedWithin available,
+      Artifact.ofCertifiedWithin certified = artifact := by
+  unfold checkWithinArtifact at h
+  cases hCheck : checkWithinCertified available layout with
+  | incompatible error =>
+      simp [CheckResult.map, hCheck] at h
+  | exact certified =>
+      refine ⟨certified, ?_⟩
+      simpa [CheckResult.map, hCheck] using h
+
+theorem checkWithinArtifact_exact_checked
+    {available : AvailableSpace}
+    {layout : Layout}
+    {artifact : Artifact}
+    (h : checkWithinArtifact available layout = .exact artifact) :
+    ∃ checked : CheckedWithin available,
+      Artifact.ofCheckedWithin checked = artifact := by
+  rcases checkWithinArtifact_exact_certified h with ⟨certified, hArtifact⟩
+  refine ⟨certified.checked, ?_⟩
+  rw [← Artifact.ofCertifiedWithin_eq_ofCheckedWithin certified]
+  exact hArtifact
+
+theorem checkWithinArtifact_exact_targetProfile
+    {available : AvailableSpace}
+    {layout : Layout}
+    {artifact : Artifact}
+    (h : checkWithinArtifact available layout = .exact artifact) :
+    artifact.targetProfile = .exact1D_v1 := by
+  rcases checkWithinArtifact_exact_certified h with ⟨certified, hArtifact⟩
+  cases hArtifact
+  exact Artifact.ofCertifiedWithin_targetProfile certified
+
+theorem checkWithinArtifact_exact_sourceGuarantee
+    {available : AvailableSpace}
+    {layout : Layout}
+    {artifact : Artifact}
+    (h : checkWithinArtifact available layout = .exact artifact) :
+    artifact.sourceGuarantee = .exact := by
+  rcases checkWithinArtifact_exact_certified h with ⟨certified, hArtifact⟩
+  rw [← hArtifact]
+  exact Artifact.ofCertifiedWithin_sourceGuarantee_exact certified
+
+theorem checkWithinArtifact_exact_outputBounds_within_inputBounds
+    {available : AvailableSpace}
+    {layout : Layout}
+    {artifact : Artifact}
+    (h : checkWithinArtifact available layout = .exact artifact) :
+    artifact.inputBounds.containsBounds artifact.outputBounds := by
+  rcases checkWithinArtifact_exact_certified h with ⟨certified, hArtifact⟩
+  rw [← hArtifact]
+  exact Artifact.ofCertifiedWithin_outputBounds_within_inputBounds certified
+
+theorem checkWithinArtifact_exact_root_kind
+    {available : AvailableSpace}
+    {layout : Layout}
+    {artifact : Artifact}
+    (h : checkWithinArtifact available layout = .exact artifact) :
+    ∃ checked : CheckedWithin available,
+      Artifact.ofCheckedWithin checked = artifact ∧ artifact.root.kind = checked.layout.kind := by
+  rcases checkWithinArtifact_exact_checked h with ⟨checked, hArtifact⟩
+  refine ⟨checked, hArtifact, ?_⟩
+  rw [← hArtifact]
+  exact Artifact.ofCheckedWithin_root_kind checked
+
+theorem checkWithinArtifact_exact_root_size
+    {available : AvailableSpace}
+    {layout : Layout}
+    {artifact : Artifact}
+    (h : checkWithinArtifact available layout = .exact artifact) :
+    ∃ checked : CheckedWithin available,
+      Artifact.ofCheckedWithin checked = artifact ∧
+      artifact.root.style.size = Size.ofExtent checked.extent := by
+  rcases checkWithinArtifact_exact_checked h with ⟨checked, hArtifact⟩
+  refine ⟨checked, hArtifact, ?_⟩
+  rw [← hArtifact]
+  exact Artifact.ofCheckedWithin_root_size checked
+
+theorem checkArtifact_exact_certified
+    {available : AvailableSpace}
+    {layout : Layout}
+    {artifact : Artifact}
+    (h : checkArtifact available layout = .exact artifact) :
+    ∃ certified : CertifiedWithin available,
+      Artifact.ofCertifiedWithin certified = artifact := by
+  unfold checkArtifact at h
+  cases hCheck : checkCertified available layout with
+  | incompatible error =>
+      simp [CheckResult.map, hCheck] at h
+  | exact certified =>
+      refine ⟨certified, ?_⟩
+      simpa [CheckResult.map, hCheck] using h
+
+theorem checkArtifact_exact_checked
+    {available : AvailableSpace}
+    {layout : Layout}
+    {artifact : Artifact}
+    (h : checkArtifact available layout = .exact artifact) :
+    ∃ checked : CheckedWithin available,
+      Artifact.ofCheckedWithin checked = artifact := by
+  rcases checkArtifact_exact_certified h with ⟨certified, hArtifact⟩
+  refine ⟨certified.checked, ?_⟩
+  rw [← Artifact.ofCertifiedWithin_eq_ofCheckedWithin certified]
+  exact hArtifact
+
+theorem checkArtifact_exact_targetProfile
+    {available : AvailableSpace}
+    {layout : Layout}
+    {artifact : Artifact}
+    (h : checkArtifact available layout = .exact artifact) :
+    artifact.targetProfile = .exact1D_v1 := by
+  rcases checkArtifact_exact_certified h with ⟨certified, hArtifact⟩
+  cases hArtifact
+  exact Artifact.ofCertifiedWithin_targetProfile certified
+
+theorem checkArtifact_exact_sourceGuarantee
+    {available : AvailableSpace}
+    {layout : Layout}
+    {artifact : Artifact}
+    (h : checkArtifact available layout = .exact artifact) :
+    artifact.sourceGuarantee = .exact := by
+  rcases checkArtifact_exact_certified h with ⟨certified, hArtifact⟩
+  rw [← hArtifact]
+  exact Artifact.ofCertifiedWithin_sourceGuarantee_exact certified
+
+theorem checkArtifact_exact_outputBounds_within_inputBounds
+    {available : AvailableSpace}
+    {layout : Layout}
+    {artifact : Artifact}
+    (h : checkArtifact available layout = .exact artifact) :
+    artifact.inputBounds.containsBounds artifact.outputBounds := by
+  rcases checkArtifact_exact_certified h with ⟨certified, hArtifact⟩
+  rw [← hArtifact]
+  exact Artifact.ofCertifiedWithin_outputBounds_within_inputBounds certified
+
+theorem checkArtifact_exact_root_kind
+    {available : AvailableSpace}
+    {layout : Layout}
+    {artifact : Artifact}
+    (h : checkArtifact available layout = .exact artifact) :
+    ∃ checked : CheckedWithin available,
+      Artifact.ofCheckedWithin checked = artifact ∧ artifact.root.kind = checked.layout.kind := by
+  rcases checkArtifact_exact_checked h with ⟨checked, hArtifact⟩
+  refine ⟨checked, hArtifact, ?_⟩
+  rw [← hArtifact]
+  exact Artifact.ofCheckedWithin_root_kind checked
+
+theorem checkArtifact_exact_root_size
+    {available : AvailableSpace}
+    {layout : Layout}
+    {artifact : Artifact}
+    (h : checkArtifact available layout = .exact artifact) :
+    ∃ checked : CheckedWithin available,
+      Artifact.ofCheckedWithin checked = artifact ∧
+      artifact.root.style.size = Size.ofExtent checked.extent := by
+  rcases checkArtifact_exact_checked h with ⟨checked, hArtifact⟩
+  refine ⟨checked, hArtifact, ?_⟩
+  rw [← hArtifact]
+  exact Artifact.ofCheckedWithin_root_size checked
 
 end TypedLayout.Backend.ExactCss

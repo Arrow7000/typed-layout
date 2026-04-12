@@ -49,6 +49,8 @@ The implemented exact fragment currently includes:
 - a typed exact-fragment CSS backend IR with exact pixel lengths, border-box
   sizing, restricted flex/block display choices, and exact row/column/padding/
   frame lowering from checked/certified layouts
+- direct `checkWithinArtifact` / `checkArtifact` helpers for lowering successful
+  exact checks straight to backend artifacts
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -77,6 +79,9 @@ The current Lean development already contains proofs/examples for:
 - exact-fragment contracts synthesized from `CertifiedWithin`, with examples
   showing exact guarantee, bounded input/output views, and backed local
   invariants
+- artifact-bridge theorems showing successful exact artifact lowering recovers
+  the blessed target profile, exact source guarantee, output-bounds-within-input
+  bounds, and checked/certified root correspondence facts
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
 - bridges showing the exposed summary invariants are backed by `LocalSound`
