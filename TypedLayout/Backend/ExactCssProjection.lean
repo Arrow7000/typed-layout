@@ -93,6 +93,12 @@ def document
     (projection : ExactProjection available source) : ExactDocument.Document :=
   projection.artifact.document
 
+def expectations
+    {available : AvailableSpace}
+    {source : Layout}
+    (projection : ExactProjection available source) : ExactDocument.Fidelity.DocumentExpectation :=
+  ExactDocument.Fidelity.ofCheckedWithin projection.checked
+
 def renderedDocument
     {available : AvailableSpace}
     {source : Layout}
@@ -272,6 +278,103 @@ theorem document_eq_artifact_document
     (projection : ExactProjection available source) :
     projection.document = projection.artifact.document :=
   rfl
+
+theorem expectation_targetProfile_exact1D_v1
+    {available : AvailableSpace}
+    {source : Layout}
+    (projection : ExactProjection available source) :
+    projection.expectations.targetProfile = .exact1D_v1 := by
+  simp [expectations]
+
+theorem expectation_sourceGuarantee_exact
+    {available : AvailableSpace}
+    {source : Layout}
+    (projection : ExactProjection available source) :
+    projection.expectations.sourceGuarantee = .exact := by
+  simpa [expectations] using
+    ExactDocument.Fidelity.ofCheckedWithin_sourceGuarantee projection.checked
+
+theorem expectation_rootClassName_zero
+    {available : AvailableSpace}
+    {source : Layout}
+    (projection : ExactProjection available source) :
+    projection.expectations.rootClassName = { serial := 0 } := by
+  simpa [expectations, ExactDocument.Fidelity.DocumentExpectation.rootClassName] using
+    ExactDocument.Fidelity.ofCheckedWithin_rootClassName projection.checked
+
+theorem expectation_rootKind
+    {available : AvailableSpace}
+    {source : Layout}
+    (projection : ExactProjection available source) :
+    projection.expectations.root.kind = projection.layout.kind := by
+  simpa [expectations, layout] using
+    ExactDocument.Fidelity.ofCheckedWithin_rootKind projection.checked
+
+theorem expectation_rootBox
+    {available : AvailableSpace}
+    {source : Layout}
+    (projection : ExactProjection available source) :
+    projection.expectations.root.box = projection.checked.evaluate.box := by
+  simpa [expectations] using
+    ExactDocument.Fidelity.ofCheckedWithin_rootBox projection.checked
+
+theorem expectation_rootSize_eq_rootExtent
+    {available : AvailableSpace}
+    {source : Layout}
+    (projection : ExactProjection available source) :
+    projection.expectations.root.size =
+      Size.ofExtent projection.expectations.root.extent := by
+  simpa [expectations] using
+    ExactDocument.Fidelity.ofCheckedWithin_rootSize_eq_rootExtent projection.checked
+
+theorem expectation_labels_eq_document_ruleClassNames
+    {available : AvailableSpace}
+    {source : Layout}
+    (projection : ExactProjection available source) :
+    projection.expectations.labels = projection.document.ruleClassNames := by
+  simpa [expectations, document] using
+    ExactDocument.Fidelity.ofCheckedWithin_labels_eq_ruleClassNames projection.checked
+
+theorem expectation_labels_eq_document_classReferences
+    {available : AvailableSpace}
+    {source : Layout}
+    (projection : ExactProjection available source) :
+    projection.expectations.labels = projection.document.classReferences := by
+  simpa [expectations, document] using
+    ExactDocument.Fidelity.ofCheckedWithin_labels_eq_classReferences projection.checked
+
+theorem expectation_labelsNodup
+    {available : AvailableSpace}
+    {source : Layout}
+    (projection : ExactProjection available source) :
+    projection.expectations.labels.Nodup := by
+  simpa [expectations] using
+    ExactDocument.Fidelity.ofCheckedWithin_labelsNodup projection.checked
+
+theorem expectation_nodeCount_eq_documentRuleCount
+    {available : AvailableSpace}
+    {source : Layout}
+    (projection : ExactProjection available source) :
+    projection.expectations.nodeCount = projection.document.stylesheet.rules.length := by
+  simpa [expectations, document] using
+    ExactDocument.Fidelity.ofCheckedWithin_nodeCount_eq_ruleCount projection.checked
+
+theorem expectation_styles_eq_documentRuleStyles
+    {available : AvailableSpace}
+    {source : Layout}
+    (projection : ExactProjection available source) :
+    projection.expectations.styles = projection.document.stylesheet.rules.map ExactDocument.ClassRule.style := by
+  simpa [expectations, document] using
+    ExactDocument.Fidelity.ofCheckedWithin_styles_eq_ruleStyles projection.checked
+
+theorem expectation_sizes_eq_documentRuleSizes
+    {available : AvailableSpace}
+    {source : Layout}
+    (projection : ExactProjection available source) :
+    projection.expectations.sizes =
+      projection.document.stylesheet.rules.map (fun rule => rule.style.size) := by
+  simpa [expectations, document] using
+    ExactDocument.Fidelity.ofCheckedWithin_sizes_eq_ruleSizes projection.checked
 
 theorem renderedDocument_eq_document_render
     {available : AvailableSpace}

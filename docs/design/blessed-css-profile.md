@@ -94,7 +94,11 @@ body/style text into a complete HTML page string with matching
 `checkWithinRenderPage` / `checkRenderPage` helpers. The proof bridges recover
 exact profile/guarantee/bounds metadata from successful artifact lowering and
 recover artifact/document provenance from successful rendered-output helpers.
-This is still only an exact-fragment projection layer: it is not yet a
+The backend layer now also derives a typed backend-fidelity expectation bundle
+for successful exact checks, pairing generated classes and lowered styles with
+source-semantic boxes so a future browser harness can compare concrete DOM/CSS
+results against typed expectations without falling back to ad-hoc string
+inspection. This is still only an exact-fragment projection layer: it is not yet a
 backend-fidelity proof, and it does not by itself upgrade any result to
 `Conditional(profile)`.
 

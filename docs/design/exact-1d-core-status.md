@@ -82,6 +82,9 @@ The implemented exact fragment currently includes:
 - a pure typed file-plan layer that expands each manifest entry to intended
   document / stylesheet / standalone-page files and contents for future export
   harnessing, still without performing any writes
+- a typed exact backend-fidelity expectation layer that derives generated-class,
+  backend-style, and source-box expectations from successful exact checks for a
+  future harness, still without introducing browser automation yet
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -130,6 +133,10 @@ The current Lean development already contains proofs/examples for:
 - a typed file-plan layer showing each manifest entry expands to the expected
   three intended output files, with filename/content correspondence staying at
   the export boundary
+- a typed backend-fidelity expectation layer showing successful exact checks can
+  recover unique generated labels, exact source boxes, and backend rule/style
+  correspondence for the lowered document, with fixture-level expectation
+  examples for the current exact corpus
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
 - bridges showing the exposed summary invariants are backed by `LocalSound`

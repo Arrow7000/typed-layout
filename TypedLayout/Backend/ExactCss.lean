@@ -920,6 +920,395 @@ theorem ofArtifact_singleRootBody (artifact : Artifact) :
 
 end Document
 
+namespace Fidelity
+
+/-- Typed backend-fidelity expectation for one lowered exact-fragment node. -/
+structure NodeExpectation where
+  className : ClassName
+  kind : LayoutKind
+  style : Style
+  box : Box
+  deriving DecidableEq, Repr
+
+namespace NodeExpectation
+
+def origin (expectation : NodeExpectation) : Origin :=
+  expectation.box.origin
+
+def extent (expectation : NodeExpectation) : ExactExtent :=
+  expectation.box.extent
+
+def size (expectation : NodeExpectation) : Size :=
+  expectation.style.size
+
+end NodeExpectation
+
+/-- Typed backend-fidelity expectations for a fully lowered exact document.
+
+The bundle keeps the future harness boundary typed: generated classes stay as
+typed labels, backend styles stay in the exact backend IR, and geometry stays in
+source-semantic boxes instead of loose rendered strings.
+-/
+structure DocumentExpectation where
+  targetProfile : BlessedCssProfile
+  sourceGuarantee : GuaranteeClass
+  root : NodeExpectation
+  nodes : List NodeExpectation
+  deriving DecidableEq, Repr
+
+namespace DocumentExpectation
+
+def nodeCount (expectation : DocumentExpectation) : Nat :=
+  expectation.nodes.length
+
+def rootClassName (expectation : DocumentExpectation) : ClassName :=
+  expectation.root.className
+
+def labels (expectation : DocumentExpectation) : List ClassName :=
+  expectation.nodes.map NodeExpectation.className
+
+def kinds (expectation : DocumentExpectation) : List LayoutKind :=
+  expectation.nodes.map NodeExpectation.kind
+
+def styles (expectation : DocumentExpectation) : List Style :=
+  expectation.nodes.map NodeExpectation.style
+
+def boxes (expectation : DocumentExpectation) : List Box :=
+  expectation.nodes.map NodeExpectation.box
+
+def sizes (expectation : DocumentExpectation) : List Size :=
+  expectation.nodes.map NodeExpectation.size
+
+theorem labels_length (expectation : DocumentExpectation) :
+    expectation.labels.length = expectation.nodeCount := by
+  simp [labels, nodeCount]
+
+theorem boxes_length (expectation : DocumentExpectation) :
+    expectation.boxes.length = expectation.nodeCount := by
+  simp [boxes, nodeCount]
+
+theorem styles_length (expectation : DocumentExpectation) :
+    expectation.styles.length = expectation.nodeCount := by
+  simp [styles, nodeCount]
+
+theorem sizes_length (expectation : DocumentExpectation) :
+    expectation.sizes.length = expectation.nodeCount := by
+  simp [sizes, nodeCount]
+
+end DocumentExpectation
+
+private structure SourceNode where
+  kind : LayoutKind
+  box : Box
+  deriving DecidableEq, Repr
+
+mutual
+
+private def sourceNodesAt (origin : Origin) : CheckedLayout → List SourceNode
+  | .leaf extent =>
+      [ { kind := .leaf
+        , box := { origin := origin, extent := extent }
+        } ]
+  | .row gap children =>
+      { kind := .row
+      , box := { origin := origin, extent := CheckedLayout.extent (.row gap children) }
+      } :: sourceNodesAlong .horizontal origin gap 0 children
+  | .column gap children =>
+      { kind := .column
+      , box := { origin := origin, extent := CheckedLayout.extent (.column gap children) }
+      } :: sourceNodesAlong .vertical origin gap 0 children
+  | .padding insets child =>
+      { kind := .padding
+      , box := { origin := origin, extent := CheckedLayout.extent (.padding insets child) }
+      } :: sourceNodesAt (origin.translate insets.left insets.top) child
+  | .frame extent child =>
+      { kind := .frame
+      , box := { origin := origin, extent := extent }
+      } :: sourceNodesAt origin child
+
+termination_by
+  layout => sizeOf layout
+
+decreasing_by
+  all_goals simp_wf
+  all_goals omega
+
+private def sourceNodesAlong
+    (axis : Axis)
+    (origin : Origin)
+    (gap : Gap)
+    (cursor : Nat)
+    : List CheckedLayout → List SourceNode
+  | [] => []
+  | child :: rest =>
+      sourceNodesAt (origin.translateAxis axis cursor) child ++
+        sourceNodesAlong axis origin gap (cursor + child.mainExtent axis + gap.amount) rest
+
+termination_by
+  children => sizeOf children
+
+decreasing_by
+  all_goals simp_wf
+  all_goals omega
+
+end
+
+mutual
+
+private theorem sourceNodesAt_length (origin : Origin) :
+    ∀ layout : CheckedLayout,
+      (sourceNodesAt origin layout).length = nodeRuleCount (Node.ofCheckedLayout layout)
+  | .leaf _ => by
+      simp [sourceNodesAt, nodeRuleCount, nodesRuleCount, Node.ofCheckedLayout]
+  | .row gap children => by
+      simp [sourceNodesAt, sourceNodesAlong_length, nodeRuleCount, Node.ofCheckedLayout,
+        Nat.add_comm]
+  | .column gap children => by
+      simp [sourceNodesAt, sourceNodesAlong_length, nodeRuleCount, Node.ofCheckedLayout,
+        Nat.add_comm]
+  | .padding insets child => by
+      simp [sourceNodesAt, sourceNodesAt_length, nodeRuleCount, Node.ofCheckedLayout,
+        nodesRuleCount, Nat.add_comm]
+  | .frame extent child => by
+      simp [sourceNodesAt, sourceNodesAt_length, nodeRuleCount, Node.ofCheckedLayout,
+        nodesRuleCount, Nat.add_comm]
+
+private theorem sourceNodesAlong_length
+    (axis : Axis)
+    (origin : Origin)
+    (gap : Gap)
+    (cursor : Nat) :
+    ∀ children : List CheckedLayout,
+      (sourceNodesAlong axis origin gap cursor children).length =
+        nodesRuleCount (Node.ofCheckedLayouts children)
+  | [] => by
+      simp [sourceNodesAlong, nodesRuleCount, Node.ofCheckedLayouts]
+  | child :: rest => by
+      simp [sourceNodesAlong, sourceNodesAt_length, sourceNodesAlong_length,
+        nodesRuleCount, Node.ofCheckedLayouts, Nat.add_assoc]
+
+end
+
+private theorem classSpan_length (start count : Nat) :
+    (classSpan start count).length = count := by
+  induction count generalizing start with
+  | zero =>
+      simp [classSpan]
+  | succ count ih =>
+      simp [classSpan, ih]
+
+private theorem lowerNode_rules_length (nextClass : Nat) (node : Node) :
+    (lowerNode nextClass node).rules.length = nodeRuleCount node := by
+  have hLengths := congrArg List.length (lowerNode_ruleClassNames nextClass node)
+  simpa [ClassRule.classNames, classSpan_length] using hLengths
+
+private def stitchExpectations : List ClassRule → List SourceNode → List NodeExpectation
+  | [], [] => []
+  | rule :: rules, source :: sources =>
+      { className := rule.className
+      , kind := source.kind
+      , style := rule.style
+      , box := source.box
+      } :: stitchExpectations rules sources
+  | [], _ :: _ => []
+  | _ :: _, [] => []
+
+private theorem stitchExpectations_labels
+    {rules : List ClassRule}
+    {sources : List SourceNode}
+    (hLen : rules.length = sources.length) :
+    (stitchExpectations rules sources).map NodeExpectation.className =
+      rules.map ClassRule.className := by
+  induction rules generalizing sources with
+  | nil =>
+      cases sources with
+      | nil =>
+          simp [stitchExpectations]
+      | cons source sources =>
+          simp at hLen
+  | cons rule rest ih =>
+      cases sources with
+      | nil =>
+          simp at hLen
+      | cons source tail =>
+          simp at hLen
+          simp [stitchExpectations, ih hLen]
+
+private theorem stitchExpectations_styles
+    {rules : List ClassRule}
+    {sources : List SourceNode}
+    (hLen : rules.length = sources.length) :
+    (stitchExpectations rules sources).map NodeExpectation.style =
+      rules.map ClassRule.style := by
+  induction rules generalizing sources with
+  | nil =>
+      cases sources with
+      | nil =>
+          simp [stitchExpectations]
+      | cons source sources =>
+          simp at hLen
+  | cons rule rest ih =>
+      cases sources with
+      | nil =>
+          simp at hLen
+      | cons source tail =>
+          simp at hLen
+          simp [stitchExpectations, ih hLen]
+
+private theorem stitchExpectations_length
+    {rules : List ClassRule}
+    {sources : List SourceNode}
+    (hLen : rules.length = sources.length) :
+    (stitchExpectations rules sources).length = rules.length := by
+  induction rules generalizing sources with
+  | nil =>
+      cases sources with
+      | nil =>
+          simp [stitchExpectations]
+      | cons source sources =>
+          simp at hLen
+  | cons rule rest ih =>
+      cases sources with
+      | nil =>
+          simp at hLen
+      | cons source tail =>
+          simp at hLen
+          simp [stitchExpectations, ih hLen]
+
+private theorem checked_sourceNodes_length_eq_rules_length
+    {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (sourceNodesAt Origin.zero checked.layout).length =
+      (lowerNode 0 (Artifact.ofCheckedWithin checked).root).rules.length := by
+  rw [sourceNodesAt_length, lowerNode_rules_length]
+  simp [Artifact.ofCheckedWithin]
+
+/-- Derive a typed exact-fragment backend-fidelity expectation bundle from a
+successful exact check.
+
+The bundle is intentionally render-free. It keeps generated classes and lowered
+styles from the backend/document pipeline while attaching source-semantic boxes
+for the same preorder of nodes.
+-/
+def ofCheckedWithin {available : AvailableSpace}
+    (checked : CheckedWithin available) : DocumentExpectation :=
+  let artifact := Artifact.ofCheckedWithin checked
+  { targetProfile := artifact.targetProfile
+  , sourceGuarantee := artifact.sourceGuarantee
+  , root :=
+      { className := { serial := 0 }
+      , kind := checked.layout.kind
+      , style := Style.ofCheckedLayout checked.layout
+      , box := checked.evaluate.box
+      }
+  , nodes :=
+      stitchExpectations
+        (lowerNode 0 artifact.root).rules
+        (sourceNodesAt Origin.zero checked.layout)
+  }
+
+theorem ofCheckedWithin_targetProfile {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).targetProfile = .exact1D_v1 := by
+  simp [ofCheckedWithin, Artifact.ofCheckedWithin]
+
+theorem ofCheckedWithin_sourceGuarantee {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).sourceGuarantee = .exact := by
+  simp [ofCheckedWithin, Artifact.ofCheckedWithin]
+
+theorem ofCheckedWithin_rootClassName {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).root.className = { serial := 0 } :=
+  rfl
+
+theorem ofCheckedWithin_rootKind {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).root.kind = checked.layout.kind :=
+  rfl
+
+theorem ofCheckedWithin_rootBox {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).root.box = checked.evaluate.box :=
+  rfl
+
+theorem ofCheckedWithin_rootExtent {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).root.extent = checked.extent := by
+  simpa [NodeExpectation.extent, ofCheckedWithin, CheckedWithin.evaluate,
+    CheckedWithin.extent, CheckedLayout.evaluate] using
+    CheckedLayout.evaluateAt_boxExtent checked.layout Origin.zero
+
+theorem ofCheckedWithin_rootSize {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).root.size = Size.ofExtent checked.extent := by
+  simpa [NodeExpectation.size, ofCheckedWithin, CheckedWithin.extent] using
+    Style.ofCheckedLayout_size checked.layout
+
+theorem ofCheckedWithin_rootSize_eq_rootExtent {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).root.size =
+      Size.ofExtent (ofCheckedWithin checked).root.extent := by
+  rw [ofCheckedWithin_rootExtent, ofCheckedWithin_rootSize]
+
+theorem ofCheckedWithin_labels_eq_ruleClassNames {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).labels =
+      (ofArtifact (Artifact.ofCheckedWithin checked)).ruleClassNames := by
+  have hLen := checked_sourceNodes_length_eq_rules_length checked
+  simpa [ofCheckedWithin, DocumentExpectation.labels, ofArtifact, ofNode,
+    Document.ruleClassNames, Stylesheet.classNames, ClassRule.classNames] using
+    stitchExpectations_labels (rules := (lowerNode 0 (Artifact.ofCheckedWithin checked).root).rules)
+      (sources := sourceNodesAt Origin.zero checked.layout) hLen.symm
+
+theorem ofCheckedWithin_labels_eq_classReferences {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).labels =
+      (ofArtifact (Artifact.ofCheckedWithin checked)).classReferences := by
+  rw [ofCheckedWithin_labels_eq_ruleClassNames checked]
+  exact (Document.ofArtifact_classReferences_eq_ruleClassNames
+    (Artifact.ofCheckedWithin checked)).symm
+
+theorem ofCheckedWithin_labelsNodup {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).labels.Nodup := by
+  rw [ofCheckedWithin_labels_eq_ruleClassNames checked]
+  exact Document.ofArtifact_ruleClassNamesNodup (Artifact.ofCheckedWithin checked)
+
+theorem ofCheckedWithin_nodeCount_eq_ruleCount {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).nodeCount =
+      (ofArtifact (Artifact.ofCheckedWithin checked)).stylesheet.rules.length := by
+  have hLen := checked_sourceNodes_length_eq_rules_length checked
+  simpa [DocumentExpectation.nodeCount, ofCheckedWithin, ofArtifact, ofNode] using
+    stitchExpectations_length (rules := (lowerNode 0 (Artifact.ofCheckedWithin checked).root).rules)
+      (sources := sourceNodesAt Origin.zero checked.layout) hLen.symm
+
+theorem ofCheckedWithin_styles_eq_ruleStyles {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).styles =
+      (ofArtifact (Artifact.ofCheckedWithin checked)).stylesheet.rules.map ClassRule.style := by
+  have hLen := checked_sourceNodes_length_eq_rules_length checked
+  simpa [DocumentExpectation.styles, ofCheckedWithin, ofArtifact, ofNode] using
+    stitchExpectations_styles (rules := (lowerNode 0 (Artifact.ofCheckedWithin checked).root).rules)
+      (sources := sourceNodesAt Origin.zero checked.layout) hLen.symm
+
+theorem ofCheckedWithin_sizes_eq_ruleSizes {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    (ofCheckedWithin checked).sizes =
+      (ofArtifact (Artifact.ofCheckedWithin checked)).stylesheet.rules.map
+        (fun rule => rule.style.size) := by
+  calc
+    (ofCheckedWithin checked).sizes = (ofCheckedWithin checked).styles.map Style.size := by
+      simp [DocumentExpectation.sizes, DocumentExpectation.styles, NodeExpectation.size, List.map_map]
+    _ = ((ofArtifact (Artifact.ofCheckedWithin checked)).stylesheet.rules.map ClassRule.style).map Style.size := by
+      rw [ofCheckedWithin_styles_eq_ruleStyles]
+    _ = (ofArtifact (Artifact.ofCheckedWithin checked)).stylesheet.rules.map
+          (fun rule => rule.style.size) := by
+      simp [List.map_map]
+
+end Fidelity
+
 end ExactDocument
 
 namespace Node
