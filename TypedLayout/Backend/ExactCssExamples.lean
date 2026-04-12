@@ -147,6 +147,29 @@ theorem exactRowDocumentRuleClasses :
       [0, 1, 2, 3] := by
   native_decide
 
+theorem exactRowDocumentClassReferenceSerials :
+    ExactDocument.ClassName.serials exactRowDocument.classReferences = [0, 1, 2, 3] := by
+  native_decide
+
+theorem exactRowDocumentRuleClassNameSerials :
+    ExactDocument.ClassName.serials exactRowDocument.ruleClassNames = [0, 1, 2, 3] := by
+  native_decide
+
+theorem exactRowDocumentClassReferences_eq_ruleClassNames :
+    exactRowDocument.classReferences = exactRowDocument.ruleClassNames := by
+  simpa [exactRowDocument] using
+    ExactDocument.Document.ofArtifact_classReferences_eq_ruleClassNames exactRowArtifact
+
+theorem exactRowDocumentRuleClassNamesNodup :
+    exactRowDocument.ruleClassNamesNodup := by
+  simpa [exactRowDocument] using
+    ExactDocument.Document.ofArtifact_ruleClassNamesNodup exactRowArtifact
+
+theorem exactRowDocumentClassReferencesCoveredByStylesheet :
+    exactRowDocument.classReferencesCoveredByStylesheet := by
+  simpa [exactRowDocument] using
+    ExactDocument.Document.ofArtifact_classReferencesCoveredByStylesheet exactRowArtifact
+
 theorem exactRowDocumentRuleSizes :
     exactRowDocument.stylesheet.rules.map (fun rule => rule.style.size) =
       [ { width := .px 470, height := .px 30 }
@@ -171,6 +194,11 @@ theorem paddedLeafDocumentRuleClasses :
     paddedLeafDocument.stylesheet.rules.map (fun rule => rule.className.serial) =
       [0, 1] := by
   native_decide
+
+theorem paddedLeafDocumentSingleRootBody :
+    paddedLeafDocument.singleRootBody := by
+  simpa [paddedLeafDocument] using
+    ExactDocument.Document.ofNode_singleRootBody paddedLeafNode
 
 def exactRowRenderedDocument : ExactDocument.RenderedDocument :=
   exactRowDocument.render

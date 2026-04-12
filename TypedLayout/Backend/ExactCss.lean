@@ -545,6 +545,28 @@ def body (children : List Element) : Element :=
 def div (className : ClassName) (children : List Element := []) : Element :=
   .node .div [className] children
 
+def tag : Element → Tag
+  | .node tag _ _ => tag
+
+def classes : Element → List ClassName
+  | .node _ classes _ => classes
+
+def children : Element → List Element
+  | .node _ _ children => children
+
+mutual
+
+/-- Collect all generated class references used by an exact-fragment element tree. -/
+def classReferences : Element → List ClassName
+  | .node _ classes children => classes ++ classReferencesList children
+
+/-- Collect all generated class references used by a list of exact-fragment elements. -/
+def classReferencesList : List Element → List ClassName
+  | [] => []
+  | child :: rest => classReferences child ++ classReferencesList rest
+
+end
+
 end Element
 
 /-- Exact-fragment stylesheet rule keyed by a generated class handle. -/
@@ -566,6 +588,114 @@ structure Document where
   body : Element
   stylesheet : Stylesheet
   deriving DecidableEq, Repr
+
+namespace ClassName
+
+/-- Collect raw serial numbers from generated exact-fragment class handles. -/
+def serials : List ClassName → List Nat
+  | [] => []
+  | className :: rest => className.serial :: serials rest
+
+end ClassName
+
+namespace ClassRule
+
+/-- Collect generated class handles from exact-fragment stylesheet rules. -/
+def classNames (rules : List ClassRule) : List ClassName :=
+  rules.map ClassRule.className
+
+theorem classNames_append (left right : List ClassRule) :
+    classNames (left ++ right) = classNames left ++ classNames right := by
+  simp [classNames]
+
+end ClassRule
+
+namespace Stylesheet
+
+/-- Collect generated class handles keyed by an exact-fragment stylesheet. -/
+def classNames (stylesheet : Stylesheet) : List ClassName :=
+  ClassRule.classNames stylesheet.rules
+
+end Stylesheet
+
+namespace Document
+
+/-- Collect all generated class references used by the document body tree. -/
+def classReferences (document : Document) : List ClassName :=
+  document.body.classReferences
+
+/-- Collect all generated class handles owned by the stylesheet rules. -/
+def ruleClassNames (document : Document) : List ClassName :=
+  document.stylesheet.classNames
+
+/-- Structural sanity property: stylesheet rule class names are pairwise distinct. -/
+def ruleClassNamesNodup (document : Document) : Prop :=
+  document.ruleClassNames.Nodup
+
+/-- Structural sanity property: every body-tree class reference is covered by a stylesheet rule. -/
+def classReferencesCoveredByStylesheet (document : Document) : Prop :=
+  ∀ className, className ∈ document.classReferences → className ∈ document.ruleClassNames
+
+/-- Structural sanity property: lowered exact documents use an unstyled body with exactly one root child. -/
+def singleRootBody (document : Document) : Prop :=
+  document.body.tag = .body ∧
+    document.body.classes = [] ∧
+    document.body.children.length = 1
+
+end Document
+
+mutual
+
+private def nodeRuleCount : Node → Nat
+  | ⟨_, _, children⟩ => 1 + nodesRuleCount children
+
+private def nodesRuleCount : List Node → Nat
+  | [] => 0
+  | child :: rest => nodeRuleCount child + nodesRuleCount rest
+
+end
+
+private def classSpan (start count : Nat) : List ClassName :=
+  match count with
+  | 0 => []
+  | count + 1 => { serial := start } :: classSpan (start + 1) count
+
+private theorem classSpan_append (start leftCount rightCount : Nat) :
+    classSpan start leftCount ++ classSpan (start + leftCount) rightCount =
+      classSpan start (leftCount + rightCount) := by
+  induction leftCount generalizing start with
+  | zero =>
+      simp [classSpan]
+  | succ leftCount ih =>
+      simpa [classSpan, Nat.add_assoc, Nat.add_left_comm, Nat.add_comm] using
+        congrArg (List.cons { serial := start }) (ih (start + 1))
+
+private theorem classSpan_mem_serial_ge
+    {start count : Nat}
+    {className : ClassName}
+    (h : className ∈ classSpan start count) :
+    start ≤ className.serial := by
+  induction count generalizing start with
+  | zero =>
+      simp [classSpan] at h
+  | succ count ih =>
+      simp [classSpan] at h
+      rcases h with hEq | hTail
+      · cases hEq
+        exact Nat.le_refl _
+      · exact Nat.le_trans (Nat.le_succ _) (ih (start := start + 1) hTail)
+
+private theorem classSpan_nodup (start count : Nat) :
+    (classSpan start count).Nodup := by
+  induction count generalizing start with
+  | zero =>
+      simp [classSpan]
+  | succ count ih =>
+      simp [classSpan, ih]
+      intro hMem
+      have hImpossible : start + 1 ≤ start := by
+        simpa using classSpan_mem_serial_ge (start := start + 1) (count := count) hMem
+      exact Nat.not_succ_le_self start hImpossible
 
 private theorem sizeOf_children_lt (node : Node) :
     sizeOf node.children < sizeOf node := by
@@ -633,6 +763,104 @@ decreasing_by
 
 end
 
+mutual
+
+private theorem lowerNode_nextClass (nextClass : Nat) :
+    ∀ node : Node, (lowerNode nextClass node).nextClass = nextClass + nodeRuleCount node
+  | ⟨_, _, children⟩ => by
+      simp [lowerNode, nodeRuleCount, lowerNodes_nextClass, Nat.add_assoc]
+
+private theorem lowerNodes_nextClass (nextClass : Nat) :
+    ∀ nodes : List Node, (lowerNodes nextClass nodes).nextClass = nextClass + nodesRuleCount nodes
+  | [] => by
+      simp [lowerNodes, nodesRuleCount]
+  | child :: rest => by
+      simp [lowerNodes, nodesRuleCount, lowerNode_nextClass, lowerNodes_nextClass,
+        Nat.add_assoc]
+
+end
+
+mutual
+
+private theorem lowerNode_ruleClassNames (nextClass : Nat) :
+    ∀ node : Node,
+      ClassRule.classNames (lowerNode nextClass node).rules =
+        classSpan nextClass (nodeRuleCount node)
+  | ⟨_, _, children⟩ => by
+      unfold lowerNode
+      simp [ClassRule.classNames, nodeRuleCount]
+      change { serial := nextClass } ::
+          List.map ClassRule.className (lowerNodes (nextClass + 1) children).rules =
+        classSpan nextClass (1 + nodesRuleCount children)
+      have hChildren :
+          { serial := nextClass } ::
+              List.map ClassRule.className (lowerNodes (nextClass + 1) children).rules =
+            { serial := nextClass } :: classSpan (nextClass + 1) (nodesRuleCount children) := by
+        exact congrArg (fun classNames => { serial := nextClass } :: classNames)
+          (lowerNodes_ruleClassNames (nextClass := nextClass + 1) children)
+      have hSpan :
+          classSpan nextClass (1 + nodesRuleCount children) =
+            { serial := nextClass } :: classSpan (nextClass + 1) (nodesRuleCount children) := by
+        rw [Nat.add_comm]
+        rfl
+      rw [hSpan]
+      exact hChildren
+
+private theorem lowerNodes_ruleClassNames (nextClass : Nat) :
+    ∀ nodes : List Node,
+      ClassRule.classNames (lowerNodes nextClass nodes).rules =
+        classSpan nextClass (nodesRuleCount nodes)
+  | [] => by
+      simp [lowerNodes, ClassRule.classNames, nodesRuleCount, classSpan]
+  | child :: rest => by
+      rw [lowerNodes]
+      rw [ClassRule.classNames_append]
+      rw [lowerNode_ruleClassNames, lowerNodes_ruleClassNames, lowerNode_nextClass]
+      exact classSpan_append nextClass (nodeRuleCount child) (nodesRuleCount rest)
+
+end
+
+mutual
+
+private theorem lowerNode_elementClassReferences (nextClass : Nat) :
+    ∀ node : Node,
+      (lowerNode nextClass node).element.classReferences =
+        classSpan nextClass (nodeRuleCount node)
+  | ⟨_, _, children⟩ => by
+      unfold lowerNode
+      simp [Element.div, Element.classReferences, nodeRuleCount]
+      change { serial := nextClass } ::
+          Element.classReferencesList (lowerNodes (nextClass + 1) children).elements =
+        classSpan nextClass (1 + nodesRuleCount children)
+      have hChildren :
+          { serial := nextClass } ::
+              Element.classReferencesList (lowerNodes (nextClass + 1) children).elements =
+            { serial := nextClass } :: classSpan (nextClass + 1) (nodesRuleCount children) := by
+        exact congrArg (fun classNames => { serial := nextClass } :: classNames)
+          (lowerNodes_elementClassReferencesList (nextClass := nextClass + 1) children)
+      have hSpan :
+          classSpan nextClass (1 + nodesRuleCount children) =
+            { serial := nextClass } :: classSpan (nextClass + 1) (nodesRuleCount children) := by
+        rw [Nat.add_comm]
+        rfl
+      rw [hSpan]
+      exact hChildren
+
+private theorem lowerNodes_elementClassReferencesList (nextClass : Nat) :
+    ∀ nodes : List Node,
+      Element.classReferencesList (lowerNodes nextClass nodes).elements =
+        classSpan nextClass (nodesRuleCount nodes)
+  | [] => by
+      simp [lowerNodes, Element.classReferencesList, nodesRuleCount, classSpan]
+  | child :: rest => by
+      rw [lowerNodes]
+      simp [Element.classReferencesList]
+      rw [lowerNode_elementClassReferences, lowerNodes_elementClassReferencesList,
+        lowerNode_nextClass]
+      exact classSpan_append nextClass (nodeRuleCount child) (nodesRuleCount rest)
+
+end
+
 /-- Lower a backend node tree into the tiny exact-fragment HTML/CSS document IR. -/
 def ofNode (node : Node) : Document :=
   let lowered := lowerNode 0 node
@@ -647,6 +875,50 @@ def ofArtifact (artifact : Artifact) : Document :=
 theorem ofArtifact_eq_ofNode (artifact : Artifact) :
     ofArtifact artifact = ofNode artifact.root :=
   rfl
+
+namespace Document
+
+theorem ofNode_classReferences_eq_ruleClassNames (node : Node) :
+    (ExactDocument.ofNode node).classReferences = (ExactDocument.ofNode node).ruleClassNames := by
+  simp [Document.classReferences, Document.ruleClassNames, ExactDocument.ofNode,
+    Element.body,
+    Stylesheet.classNames, Element.classReferences, Element.classReferencesList,
+    lowerNode_elementClassReferences, lowerNode_ruleClassNames]
+
+theorem ofNode_ruleClassNamesNodup (node : Node) :
+    (ExactDocument.ofNode node).ruleClassNamesNodup := by
+  simp [Document.ruleClassNamesNodup, Document.ruleClassNames, ExactDocument.ofNode,
+    Stylesheet.classNames, lowerNode_ruleClassNames, classSpan_nodup]
+
+theorem ofNode_classReferencesCoveredByStylesheet (node : Node) :
+    (ExactDocument.ofNode node).classReferencesCoveredByStylesheet := by
+  intro className hMem
+  simpa [ofNode_classReferences_eq_ruleClassNames node] using hMem
+
+theorem ofNode_singleRootBody (node : Node) :
+    (ExactDocument.ofNode node).singleRootBody := by
+  simp [Document.singleRootBody, Element.tag, Element.classes, Element.children,
+    ExactDocument.ofNode, Element.body]
+
+theorem ofArtifact_classReferences_eq_ruleClassNames (artifact : Artifact) :
+    (ExactDocument.ofArtifact artifact).classReferences =
+      (ExactDocument.ofArtifact artifact).ruleClassNames := by
+  simpa [ExactDocument.ofArtifact] using ofNode_classReferences_eq_ruleClassNames artifact.root
+
+theorem ofArtifact_ruleClassNamesNodup (artifact : Artifact) :
+    (ExactDocument.ofArtifact artifact).ruleClassNamesNodup := by
+  simpa [ExactDocument.ofArtifact] using ofNode_ruleClassNamesNodup artifact.root
+
+theorem ofArtifact_classReferencesCoveredByStylesheet (artifact : Artifact) :
+    (ExactDocument.ofArtifact artifact).classReferencesCoveredByStylesheet := by
+  simpa [ExactDocument.ofArtifact] using
+    ofNode_classReferencesCoveredByStylesheet artifact.root
+
+theorem ofArtifact_singleRootBody (artifact : Artifact) :
+    (ExactDocument.ofArtifact artifact).singleRootBody := by
+  simpa [ExactDocument.ofArtifact] using ofNode_singleRootBody artifact.root
+
+end Document
 
 end ExactDocument
 

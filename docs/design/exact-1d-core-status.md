@@ -60,6 +60,9 @@ The implemented exact fragment currently includes:
 - a tiny typed exact-fragment HTML/CSS document IR with generated-class
   stylesheet rules and `body`/`div` element trees lowered from backend nodes and
   artifacts without raw string emission
+- typed exact-document helpers that collect body-tree class references,
+  stylesheet rule class names, and single-root body structure without dropping to
+  raw rendered strings
 - a total exact-fragment rendering layer that projects the typed backend/document
   IR to concrete HTML/CSS text at the final output boundary
 - a small standalone exact-page output layer that assembles rendered document
@@ -105,6 +108,9 @@ The current Lean development already contains proofs/examples for:
 - rendered-output bridge theorems showing successful exact rendered-document /
   HTML / CSS / standalone-page helpers still recover the backend artifact/
   document provenance they came from
+- exact-document structural theorems showing generated stylesheet class names are
+  nodup, body-tree class references are covered by stylesheet rules, and exact
+  lowering keeps the document rooted at an unstyled single-child body
 - a canonical typed backend fixture layer that keeps a small exact-example corpus
   available through typed identifiers instead of loose ad-hoc example selection
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and

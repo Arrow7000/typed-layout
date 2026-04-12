@@ -122,6 +122,21 @@ theorem renderPageResult_exact (fixture : Fixture) :
   simp [renderPageResult, renderPage, checkRenderPage,
     CheckResult.map, fixture.artifactExact]
 
+theorem document_ruleClassNamesNodup (fixture : Fixture) :
+    fixture.document.ruleClassNamesNodup := by
+  simpa [document, Fixture.document] using
+    ExactDocument.Document.ofArtifact_ruleClassNamesNodup fixture.artifact
+
+theorem document_classReferencesCoveredByStylesheet (fixture : Fixture) :
+    fixture.document.classReferencesCoveredByStylesheet := by
+  simpa [document, Fixture.document] using
+    ExactDocument.Document.ofArtifact_classReferencesCoveredByStylesheet fixture.artifact
+
+theorem document_singleRootBody (fixture : Fixture) :
+    fixture.document.singleRootBody := by
+  simpa [document, Fixture.document] using
+    ExactDocument.Document.ofArtifact_singleRootBody fixture.artifact
+
 end Fixture
 
 def fixture : FixtureId → Fixture
@@ -182,6 +197,10 @@ theorem exactRowFixture_targetProfile :
     exactRowFixture.artifact.targetProfile = .exact1D_v1 := by
   exact Fixture.targetProfile_exact1D_v1 exactRowFixture
 
+theorem exactRowFixture_document_ruleClassNamesNodup :
+    exactRowFixture.document.ruleClassNamesNodup := by
+  exact Fixture.document_ruleClassNamesNodup exactRowFixture
+
 theorem paddedLeafFixture_renderCssResult_exact :
     paddedLeafFixture.renderCssResult = .exact paddedLeafFixture.renderCss := by
   exact Fixture.renderCssResult_exact paddedLeafFixture
@@ -190,9 +209,17 @@ theorem framedLeafFixture_renderedPageResult_exact :
     framedLeafFixture.renderedPageResult = .exact framedLeafFixture.renderedPage := by
   exact Fixture.renderedPageResult_exact framedLeafFixture
 
+theorem framedLeafFixture_document_singleRootBody :
+    framedLeafFixture.document.singleRootBody := by
+  exact Fixture.document_singleRootBody framedLeafFixture
+
 theorem nestedFrameRowFixture_outputBounds_within_inputBounds :
     nestedFrameRowFixture.artifact.inputBounds.containsBounds
       nestedFrameRowFixture.artifact.outputBounds := by
   exact Fixture.outputBounds_within_inputBounds nestedFrameRowFixture
+
+theorem nestedFrameRowFixture_document_classReferencesCoveredByStylesheet :
+    nestedFrameRowFixture.document.classReferencesCoveredByStylesheet := by
+  exact Fixture.document_classReferencesCoveredByStylesheet nestedFrameRowFixture
 
 end TypedLayout.Backend.ExactCssFixtures
