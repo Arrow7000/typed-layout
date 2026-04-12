@@ -150,6 +150,12 @@ theorem contract_output_bounds_within_input_bounds {available : AvailableSpace}
     certified.contract.input.bounds.containsBounds certified.contract.output.bounds :=
   ExactLayoutContract.output_bounds_within_input_bounds certified
 
+theorem contract_output_bounds_contains_output_extent {available : AvailableSpace}
+    (certified : CertifiedWithin available) :
+    certified.contract.output.bounds.contains certified.contract.output.extent := by
+  simpa [CertifiedWithin.contract] using
+    ExactLayoutContract.output_bounds_contains_extent certified
+
 theorem contract_invariant_holds
     {available : AvailableSpace}
     (certified : CertifiedWithin available)
@@ -167,5 +173,121 @@ def checkWithinContract (available : AvailableSpace) (layout : Layout) :
 def checkContract (available : AvailableSpace) (layout : Layout) :
     CheckResult ExactLayoutContract :=
   (checkCertified available layout).map CertifiedWithin.contract
+
+theorem checkWithinContract_exact_certified
+    {available : AvailableSpace}
+    {layout : Layout}
+    {contract : ExactLayoutContract}
+    (h : checkWithinContract available layout = .exact contract) :
+    ∃ certified : CertifiedWithin available, certified.contract = contract := by
+  unfold checkWithinContract at h
+  cases hCheck : checkWithinCertified available layout with
+  | incompatible error =>
+      simp [CheckResult.map, hCheck] at h
+  | exact certified =>
+      refine ⟨certified, ?_⟩
+      simpa [CheckResult.map, hCheck] using h
+
+theorem checkWithinContract_exact_guarantee
+    {available : AvailableSpace}
+    {layout : Layout}
+    {contract : ExactLayoutContract}
+    (h : checkWithinContract available layout = .exact contract) :
+    contract.guarantee = .exact := by
+  rcases checkWithinContract_exact_certified h with ⟨certified, hContract⟩
+  rw [← hContract]
+  exact CertifiedWithin.contract_guarantee certified
+
+theorem checkWithinContract_exact_output_bounds_within_input_bounds
+    {available : AvailableSpace}
+    {layout : Layout}
+    {contract : ExactLayoutContract}
+    (h : checkWithinContract available layout = .exact contract) :
+    contract.input.bounds.containsBounds contract.output.bounds := by
+  rcases checkWithinContract_exact_certified h with ⟨certified, hContract⟩
+  rw [← hContract]
+  exact CertifiedWithin.contract_output_bounds_within_input_bounds certified
+
+theorem checkWithinContract_exact_output_bounds_contains_output_extent
+    {available : AvailableSpace}
+    {layout : Layout}
+    {contract : ExactLayoutContract}
+    (h : checkWithinContract available layout = .exact contract) :
+    contract.output.bounds.contains contract.output.extent := by
+  rcases checkWithinContract_exact_certified h with ⟨certified, hContract⟩
+  rw [← hContract]
+  exact CertifiedWithin.contract_output_bounds_contains_output_extent certified
+
+theorem checkWithinContract_exact_invariant_holds
+    {available : AvailableSpace}
+    {layout : Layout}
+    {contract : ExactLayoutContract}
+    {invariant : ExactLocalInvariant}
+    (h : checkWithinContract available layout = .exact contract)
+    (hMem : invariant ∈ contract.localInvariants) :
+    ∃ certified : CertifiedWithin available,
+      certified.contract = contract ∧ invariant.Holds certified.layout := by
+  rcases checkWithinContract_exact_certified h with ⟨certified, hContract⟩
+  have hMem' : invariant ∈ certified.contract.localInvariants := by
+    simpa [hContract] using hMem
+  exact ⟨certified, hContract, CertifiedWithin.contract_invariant_holds certified hMem'⟩
+
+theorem checkContract_exact_certified
+    {available : AvailableSpace}
+    {layout : Layout}
+    {contract : ExactLayoutContract}
+    (h : checkContract available layout = .exact contract) :
+    ∃ certified : CertifiedWithin available, certified.contract = contract := by
+  unfold checkContract at h
+  cases hCheck : checkCertified available layout with
+  | incompatible error =>
+      simp [CheckResult.map, hCheck] at h
+  | exact certified =>
+      refine ⟨certified, ?_⟩
+      simpa [CheckResult.map, hCheck] using h
+
+theorem checkContract_exact_guarantee
+    {available : AvailableSpace}
+    {layout : Layout}
+    {contract : ExactLayoutContract}
+    (h : checkContract available layout = .exact contract) :
+    contract.guarantee = .exact := by
+  rcases checkContract_exact_certified h with ⟨certified, hContract⟩
+  rw [← hContract]
+  exact CertifiedWithin.contract_guarantee certified
+
+theorem checkContract_exact_output_bounds_within_input_bounds
+    {available : AvailableSpace}
+    {layout : Layout}
+    {contract : ExactLayoutContract}
+    (h : checkContract available layout = .exact contract) :
+    contract.input.bounds.containsBounds contract.output.bounds := by
+  rcases checkContract_exact_certified h with ⟨certified, hContract⟩
+  rw [← hContract]
+  exact CertifiedWithin.contract_output_bounds_within_input_bounds certified
+
+theorem checkContract_exact_output_bounds_contains_output_extent
+    {available : AvailableSpace}
+    {layout : Layout}
+    {contract : ExactLayoutContract}
+    (h : checkContract available layout = .exact contract) :
+    contract.output.bounds.contains contract.output.extent := by
+  rcases checkContract_exact_certified h with ⟨certified, hContract⟩
+  rw [← hContract]
+  exact CertifiedWithin.contract_output_bounds_contains_output_extent certified
+
+theorem checkContract_exact_invariant_holds
+    {available : AvailableSpace}
+    {layout : Layout}
+    {contract : ExactLayoutContract}
+    {invariant : ExactLocalInvariant}
+    (h : checkContract available layout = .exact contract)
+    (hMem : invariant ∈ contract.localInvariants) :
+    ∃ certified : CertifiedWithin available,
+      certified.contract = contract ∧ invariant.Holds certified.layout := by
+  rcases checkContract_exact_certified h with ⟨certified, hContract⟩
+  have hMem' : invariant ∈ certified.contract.localInvariants := by
+    simpa [hContract] using hMem
+  exact ⟨certified, hContract, CertifiedWithin.contract_invariant_holds certified hMem'⟩
 
 end TypedLayout.Core
