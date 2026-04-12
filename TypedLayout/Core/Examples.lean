@@ -1,4 +1,4 @@
-import TypedLayout.Core.Certified
+import TypedLayout.Core.Summary
 
 namespace TypedLayout.Core.Examples
 
@@ -103,6 +103,46 @@ theorem exactRowCertifiedLocalSound :
 theorem exactRowCertifiedLocalWitness :
     exactRowCertified.layout.localWitness? = true :=
   exactRowCertified.localWitness
+
+def exactRowSummary : ExactLayoutSummary :=
+  exactRowCheckedLayout.summary
+
+theorem exactRowSummaryGuarantee :
+    exactRowSummary.guarantee = .exact := by
+  simpa [exactRowSummary, CheckedLayout.summary] using
+    CheckedLayout.summary_guarantee exactRowCheckedLayout
+
+theorem exactRowSummaryLocalInvariants :
+    exactRowSummary.localInvariants =
+      [ .immediateChildrenFitWithin
+      , .adjacentChildrenSeparated .horizontal { amount := 10 }
+      ] := by
+  native_decide
+
+theorem exactRowSummaryChildExtents :
+    exactRowSummary.children.map ExactLayoutSummary.extent =
+      [ { width := 100, height := 20 }
+      , { width := 150, height := 30 }
+      , { width := 200, height := 25 }
+      ] := by
+  native_decide
+
+theorem exactRowCertifiedSummaryLocalInvariants :
+    exactRowCertified.summary.localInvariants =
+      [ .immediateChildrenFitWithin
+      , .adjacentChildrenSeparated .horizontal { amount := 10 }
+      ] := by
+  native_decide
+
+theorem exactRowCertifiedSummarySeparated :
+    ExactLocalInvariant.Holds
+      (.adjacentChildrenSeparated .horizontal { amount := 10 })
+      exactRowCertified.layout := by
+  have hMem :
+      .adjacentChildrenSeparated .horizontal { amount := 10 } ∈
+        exactRowCertified.summary.localInvariants := by
+    simp [exactRowCertifiedSummaryLocalInvariants]
+  exact CertifiedWithin.summary_invariant_holds exactRowCertified hMem
 
 def tooWideRowLayout : Layout :=
   .row { amount := 10 }
@@ -239,6 +279,27 @@ theorem framedLeafChildFitsWithin :
       (.leaf { width := 100, height := 50 })
       Origin.zero
       fits
+
+def framedLeafSummary : ExactLayoutSummary :=
+  framedLeafCheckedLayout.summary
+
+theorem framedLeafSummaryLocalInvariants :
+    framedLeafSummary.localInvariants =
+      [ .frameChildFitsWithin
+      , .immediateChildrenFitWithin
+      ] := by
+  native_decide
+
+theorem framedLeafLocalSound :
+    CheckedLayout.LocalSound framedLeafCheckedLayout := by
+  refine ⟨?_, framedLeafChildFitsWithin, trivial⟩
+  native_decide
+
+theorem framedLeafSummaryFrameChildFits :
+    ExactLocalInvariant.Holds .frameChildFitsWithin framedLeafCheckedLayout := by
+  have hMem : .frameChildFitsWithin ∈ framedLeafSummary.localInvariants := by
+    simp [framedLeafSummaryLocalInvariants]
+  exact CheckedLayout.summary_invariant_holds framedLeafLocalSound hMem
 
 def nestedFrameRowLayout : Layout :=
   .frame { width := 200, height := 80 }

@@ -13,6 +13,7 @@ This note records what the current Lean core actually covers right now.
 - `TypedLayout/Core/Eval.lean`
 - `TypedLayout/Core/Properties.lean`
 - `TypedLayout/Core/Certified.lean`
+- `TypedLayout/Core/Summary.lean`
 - `TypedLayout/Core/Examples.lean`
 
 ## Current implemented fragment
@@ -32,6 +33,8 @@ The implemented exact fragment currently includes:
 - a checker returning `CheckedWithin available`
 - an opt-in `CertifiedWithin available` success certificate bundling fit evidence,
   propositional local soundness, and executable local witness truth
+- a first public exact-fragment summary layer exposing exact guarantee class,
+  exact extents, and typed local-invariant inventories for checked layouts
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -53,6 +56,9 @@ The current Lean development already contains proofs/examples for:
 - soundness/completeness bridges for the main local executable booleans
 - soundness bridges from executable local witnesses back to propositional local facts
 - checker-to-witness bridges showing successful exact checks produce locally-sound checked layouts and `localWitness? = true`
+- public exact-fragment summaries synthesized from `CheckedLayout` and
+  `CertifiedWithin`
+- bridges showing the exposed summary invariants are backed by `LocalSound`
 - generic padding child containment
 - generic framed-leaf child containment when a fit proof is supplied
 - incompatible layouts surfacing the expected checker error shape
