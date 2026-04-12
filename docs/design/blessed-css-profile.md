@@ -103,6 +103,10 @@ expectations to a typed browser-probe plan with one probe target per generated
 class, keeping selector strings confined to the outer probe boundary. This is
 still only an exact-fragment projection layer: it is not yet a backend-fidelity
 proof, and it does not by itself upgrade any result to `Conditional(profile)`.
+The repository now also carries a typed exact browser-observation layer for
+ordered observed boxes/style slices plus typed comparisons against probe plans,
+so future harness work can stay inside a typed expectation/observation/result
+boundary instead of dropping immediately to loose string inspection.
 
 ## 7. Likely next backend questions
 

@@ -89,6 +89,9 @@ The implemented exact fragment currently includes:
 - a typed exact browser-probe plan layer that projects those fidelity
   expectations to per-generated-class probe targets, keeping selectors typed as
   generated labels until the final browser boundary
+- a typed exact browser-observation layer for ordered per-target observed boxes
+  and style slices, plus typed comparison results against exact probe plans,
+  still without introducing browser automation yet
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -145,6 +148,10 @@ The current Lean development already contains proofs/examples for:
   one probe target per lowered generated class, with labels/boxes/counts still
   lining up with the backend-fidelity expectation layer and fixture-level probe
   examples for the current exact corpus
+- a typed browser-observation/comparison layer showing exact probe plans can be
+  paired with ordered observed targets and compared back to the expected exact
+  boxes/styles without falling back to ad-hoc strings, with fixture-level exact
+  match examples and a small shifted-observation mismatch example
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
 - bridges showing the exposed summary invariants are backed by `LocalSound`

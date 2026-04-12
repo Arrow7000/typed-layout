@@ -1,4 +1,4 @@
-import TypedLayout.Backend.ExactCssProbePlan
+import TypedLayout.Backend.ExactCssProbeObservation
 import TypedLayout.Core.Examples
 
 namespace TypedLayout.Backend.ExactCssFixtures
@@ -71,6 +71,12 @@ def expectations (fixture : Fixture) : ExactDocument.Fidelity.DocumentExpectatio
 
 def probePlan (fixture : Fixture) : ExactDocument.ProbePlan.Plan :=
   fixture.projection.probePlan
+
+def observation (fixture : Fixture) : ExactDocument.ProbeObservation.Document :=
+  ExactDocument.ProbeObservation.Document.ofPlan fixture.probePlan
+
+def comparison (fixture : Fixture) : ExactDocument.ProbeComparison.DocumentComparison :=
+  ExactDocument.ProbeComparison.DocumentComparison.compare fixture.probePlan fixture.observation
 
 def renderedDocument (fixture : Fixture) : ExactDocument.RenderedDocument :=
   fixture.artifact.renderedDocument
@@ -202,6 +208,65 @@ theorem probePlan_nodeCount_eq_documentRuleCount (fixture : Fixture) :
   simpa [probePlan, document, Fixture.document] using
     fixture.projection.probePlan_nodeCount_eq_documentRuleCount
 
+theorem observation_nodeCount_eq_probePlan_nodeCount (fixture : Fixture) :
+    fixture.observation.nodeCount = fixture.probePlan.nodeCount := by
+  simpa [observation, probePlan] using
+    ExactDocument.ProbeObservation.Document.ofPlan_nodeCount fixture.probePlan
+
+theorem observation_labels_eq_probePlan_labels (fixture : Fixture) :
+    fixture.observation.labels = fixture.probePlan.labels := by
+  simpa [observation, probePlan] using
+    ExactDocument.ProbeObservation.Document.ofPlan_labels fixture.probePlan
+
+theorem observation_sourceBoxes_eq_probePlan_boxes (fixture : Fixture) :
+    fixture.observation.sourceBoxes = fixture.probePlan.boxes := by
+  simpa [observation, probePlan] using
+    ExactDocument.ProbeObservation.Document.ofPlan_sourceBoxes fixture.probePlan
+
+theorem observation_backendStyles_eq_probePlan_styles (fixture : Fixture) :
+    fixture.observation.backendStyles = fixture.probePlan.styles := by
+  simpa [observation, probePlan] using
+    ExactDocument.ProbeObservation.Document.ofPlan_backendStyles fixture.probePlan
+
+theorem comparison_targetProfile_exact1D_v1 (fixture : Fixture) :
+    fixture.comparison.targetProfile = .exact1D_v1 := by
+  calc
+    fixture.comparison.targetProfile = fixture.probePlan.targetProfile := by
+      rfl
+    _ = .exact1D_v1 := by
+      exact fixture.probePlan_targetProfile_exact1D_v1
+
+theorem comparison_sourceGuarantee_exact (fixture : Fixture) :
+    fixture.comparison.sourceGuarantee = .exact := by
+  calc
+    fixture.comparison.sourceGuarantee = fixture.probePlan.sourceGuarantee := by
+      rfl
+    _ = .exact := by
+      exact fixture.probePlan_sourceGuarantee_exact
+
+theorem comparison_resultCount_eq_probePlan_nodeCount (fixture : Fixture) :
+    fixture.comparison.resultCount = fixture.probePlan.nodeCount := by
+  simpa [comparison, probePlan] using
+    ExactDocument.ProbeComparison.DocumentComparison.compare_ofPlan_resultCount fixture.probePlan
+
+theorem comparison_targetCountMatches (fixture : Fixture) :
+    fixture.comparison.targetCountMatches = true := by
+  simpa [comparison, probePlan] using
+    ExactDocument.ProbeComparison.DocumentComparison.compare_ofPlan_targetCountMatches
+      fixture.probePlan
+
+theorem comparison_allTargetsMatch (fixture : Fixture) :
+    fixture.comparison.allTargetsMatch = true := by
+  simpa [comparison, probePlan] using
+    ExactDocument.ProbeComparison.DocumentComparison.compare_ofPlan_allTargetsMatch
+      fixture.probePlan
+
+theorem comparison_matchesExactly (fixture : Fixture) :
+    fixture.comparison.matchesExactly = true := by
+  simpa [comparison, probePlan] using
+    ExactDocument.ProbeComparison.DocumentComparison.compare_ofPlan_matchesExactly
+      fixture.probePlan
+
 end Fixture
 
 def fixture : FixtureId → Fixture
@@ -319,6 +384,20 @@ theorem exactRowFixture_probePlanBoxes :
   rw [Fixture.probePlan_boxes_eq_expectation_boxes]
   exact exactRowFixture_expectationBoxes
 
+theorem exactRowFixture_observationSourceBoxes :
+    exactRowFixture.observation.sourceBoxes =
+      [ { origin := Origin.zero, extent := { width := 470, height := 30 } }
+      , { origin := Origin.zero, extent := { width := 100, height := 20 } }
+      , { origin := { x := 110, y := 0 }, extent := { width := 150, height := 30 } }
+      , { origin := { x := 270, y := 0 }, extent := { width := 200, height := 25 } }
+      ] := by
+  rw [Fixture.observation_sourceBoxes_eq_probePlan_boxes]
+  exact exactRowFixture_probePlanBoxes
+
+theorem exactRowFixture_comparisonMatchesExactly :
+    exactRowFixture.comparison.matchesExactly = true := by
+  exact Fixture.comparison_matchesExactly exactRowFixture
+
 theorem exactRowCheckWithinProbePlanExact :
     checkWithinProbePlan exactRowAvailable exactRowLayout = .exact exactRowFixture.probePlan := by
   native_decide
@@ -379,5 +458,46 @@ theorem nestedFrameRowFixture_probePlanOrigins :
       ] := by
   rw [Fixture.probePlan_boxes_eq_expectation_boxes]
   exact nestedFrameRowFixture_expectationOrigins
+
+theorem nestedFrameRowFixture_observationOrigins :
+    nestedFrameRowFixture.observation.sourceBoxes.map (fun box => box.origin) =
+      [ Origin.zero
+      , Origin.zero
+      , { x := 10, y := 5 }
+      , { x := 10, y := 5 }
+      , { x := 78, y := 5 }
+      ] := by
+  rw [Fixture.observation_sourceBoxes_eq_probePlan_boxes]
+  exact nestedFrameRowFixture_probePlanOrigins
+
+def exactRowShiftedObservation : ExactDocument.ProbeObservation.Document :=
+  match exactRowFixture.observation.targets with
+  | root :: child1 :: child2 :: child3 :: [] =>
+      { targets :=
+          [ root
+          , { child1 with
+                box :=
+                    { origin := { x := 1, y := 0 }
+                    , extent := child1.box.extent
+                    }
+            }
+          , child2
+          , child3
+          ]
+      }
+  | targets =>
+      { targets := targets }
+
+def exactRowShiftedComparison : ExactDocument.ProbeComparison.DocumentComparison :=
+  ExactDocument.ProbeComparison.DocumentComparison.compare
+    exactRowFixture.probePlan exactRowShiftedObservation
+
+theorem exactRowShiftedComparison_targetCountMatches :
+    exactRowShiftedComparison.targetCountMatches = true := by
+  native_decide
+
+theorem exactRowShiftedComparison_matchesExactly :
+    exactRowShiftedComparison.matchesExactly = false := by
+  native_decide
 
 end TypedLayout.Backend.ExactCssFixtures

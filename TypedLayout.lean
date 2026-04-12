@@ -12,6 +12,7 @@ import TypedLayout.Backend.ExactCss
 import TypedLayout.Backend.ExactCssRender
 import TypedLayout.Backend.ExactCssProjection
 import TypedLayout.Backend.ExactCssProbePlan
+import TypedLayout.Backend.ExactCssProbeObservation
 import TypedLayout.Backend.ExactCssFixtures
 import TypedLayout.Backend.ExactCssManifest
 import TypedLayout.Backend.ExactCssExamples
