@@ -80,6 +80,11 @@ If a proposed source-language construct cannot plausibly lower under
 `exact1D_v1`, that is a warning sign that it may be too early for the current
 tranche.
 
+The repository now also contains a typed exact-fragment backend IR and lowering
+for row/column/padding/frame aimed at this profile boundary. That is still only
+an internal lowering target: it is not raw CSS emission yet, and it does not by
+itself upgrade any result to backend-fidelity `Conditional(profile)`.
+
 ## 7. Likely next backend questions
 
 The next durable backend questions are probably:

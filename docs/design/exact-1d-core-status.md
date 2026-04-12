@@ -16,6 +16,8 @@ This note records what the current Lean core actually covers right now.
 - `TypedLayout/Core/Summary.lean`
 - `TypedLayout/Core/Contract.lean`
 - `TypedLayout/Core/Examples.lean`
+- `TypedLayout/Backend/ExactCss.lean`
+- `TypedLayout/Backend/ExactCssExamples.lean`
 
 ## Current implemented fragment
 
@@ -44,6 +46,9 @@ The implemented exact fragment currently includes:
 - a first explicit exact-fragment contract layer exposing bounded input/output
   views, exact outputs, guarantee class, and local invariants synthesized from
   `CertifiedWithin available`
+- a typed exact-fragment CSS backend IR with exact pixel lengths, border-box
+  sizing, restricted flex/block display choices, and exact row/column/padding/
+  frame lowering from checked/certified layouts
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -119,10 +124,14 @@ Important boundaries of the current implementation:
 
 Before any serious CSS lowering, the next desirable semantic work is still:
 
+- decide whether plain contracts should eventually carry enough structural data
+  to support standalone backend lowering, rather than relying on
+  `CheckedLayout`/`CertifiedWithin` for exact lowering
 - a cleaner checked/proof boundary if the guarantee story keeps growing
 - clearer alignment between exact guarantees and future `conditional(profile)`
   guarantees
-- a crisper backend mapping note for row/column/padding/frame
+- string emission plus a fidelity story connecting the typed backend IR to CSS
+  under the blessed profile
 
 ## What is still missing before text work
 
