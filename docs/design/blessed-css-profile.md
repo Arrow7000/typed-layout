@@ -83,11 +83,12 @@ tranche.
 The repository now also contains a typed exact-fragment backend IR and lowering
 for row/column/padding/frame aimed at this profile boundary, plus a tiny typed
 HTML/CSS document layer with generated-class stylesheet rules lowered from those
-artifacts, and direct `checkWithinArtifact` / `checkArtifact` helpers with proof
+artifacts, a total renderer from that typed document IR to concrete HTML/CSS
+text, and direct `checkWithinArtifact` / `checkArtifact` helpers with proof
 bridges for recovering exact profile/guarantee/bounds metadata from successful
-artifact lowering. This is still only an internal lowering target: it is not raw
-CSS emission yet, and it does not by itself upgrade any result to
-backend-fidelity `Conditional(profile)`.
+artifact lowering. This is still only an exact-fragment projection layer: it is
+not yet a backend-fidelity proof, and it does not by itself upgrade any result
+to `Conditional(profile)`.
 
 ## 7. Likely next backend questions
 

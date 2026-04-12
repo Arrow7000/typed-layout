@@ -54,6 +54,8 @@ The implemented exact fragment currently includes:
 - a tiny typed exact-fragment HTML/CSS document IR with generated-class
   stylesheet rules and `body`/`div` element trees lowered from backend nodes and
   artifacts without raw string emission
+- a total exact-fragment rendering layer that projects the typed backend/document
+  IR to concrete HTML/CSS text at the final output boundary
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -138,8 +140,8 @@ Before any serious CSS lowering, the next desirable semantic work is still:
 - a cleaner checked/proof boundary if the guarantee story keeps growing
 - clearer alignment between exact guarantees and future `conditional(profile)`
   guarantees
-- document rendering/string emission plus a fidelity story connecting the typed
-  backend IR and typed document IR to CSS under the blessed profile
+- a fidelity story connecting the typed backend IR, typed document IR, and final
+  HTML/CSS text projection to CSS under the blessed profile
 
 ## What is still missing before text work
 

@@ -1,4 +1,4 @@
-import TypedLayout.Backend.ExactCss
+import TypedLayout.Backend.ExactCssRender
 import TypedLayout.Core.Examples
 
 namespace TypedLayout.Backend.ExactCssExamples
@@ -167,6 +167,40 @@ theorem paddedLeafDocumentBody :
 theorem paddedLeafDocumentRuleClasses :
     paddedLeafDocument.stylesheet.rules.map (fun rule => rule.className.serial) =
       [0, 1] := by
+  native_decide
+
+def exactRowRenderedDocument : ExactDocument.RenderedDocument :=
+  exactRowDocument.render
+
+theorem exactRowRenderedDocumentMatchesArtifact :
+    exactRowArtifact.renderedDocument = exactRowRenderedDocument := by
+  native_decide
+
+theorem exactRowRenderedHtml :
+    exactRowRenderedDocument.html =
+      "<body><div class=\"tl-0\"><div class=\"tl-1\"></div><div class=\"tl-2\"></div><div class=\"tl-3\"></div></div></body>" := by
+  native_decide
+
+theorem exactRowRenderedCss :
+    exactRowRenderedDocument.css =
+      ".tl-0{box-sizing:border-box;width:470px;height:30px;padding-left:0px;padding-top:0px;padding-right:0px;padding-bottom:0px;display:flex;flex-direction:row;gap:10px;flex-wrap:nowrap;justify-content:flex-start;align-items:flex-start;flex-grow:0;flex-shrink:0;}\n" ++
+      ".tl-1{box-sizing:border-box;width:100px;height:20px;padding-left:0px;padding-top:0px;padding-right:0px;padding-bottom:0px;display:block;flex-grow:0;flex-shrink:0;}\n" ++
+      ".tl-2{box-sizing:border-box;width:150px;height:30px;padding-left:0px;padding-top:0px;padding-right:0px;padding-bottom:0px;display:block;flex-grow:0;flex-shrink:0;}\n" ++
+      ".tl-3{box-sizing:border-box;width:200px;height:25px;padding-left:0px;padding-top:0px;padding-right:0px;padding-bottom:0px;display:block;flex-grow:0;flex-shrink:0;}" := by
+  native_decide
+
+def paddedLeafRenderedDocument : ExactDocument.RenderedDocument :=
+  paddedLeafDocument.render
+
+theorem paddedLeafRenderedHtml :
+    paddedLeafRenderedDocument.html =
+      "<body><div class=\"tl-0\"><div class=\"tl-1\"></div></div></body>" := by
+  native_decide
+
+theorem paddedLeafRenderedCss :
+    paddedLeafRenderedDocument.css =
+      ".tl-0{box-sizing:border-box;width:15px;height:7px;padding-left:2px;padding-top:1px;padding-right:3px;padding-bottom:1px;display:block;flex-grow:0;flex-shrink:0;}\n" ++
+      ".tl-1{box-sizing:border-box;width:10px;height:5px;padding-left:0px;padding-top:0px;padding-right:0px;padding-bottom:0px;display:block;flex-grow:0;flex-shrink:0;}" := by
   native_decide
 
 end TypedLayout.Backend.ExactCssExamples
