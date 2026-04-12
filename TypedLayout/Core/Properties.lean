@@ -56,6 +56,33 @@ end GeometryTree
 
 namespace CheckedLayout
 
+mutual
+
+def localWitness? : CheckedLayout → Bool
+  | .leaf _ => true
+  | .row gap children =>
+      let tree := (CheckedLayout.row gap children).evaluate
+      tree.immediateChildrenFitWithin? &&
+        adjacentSeparatedAlong? .horizontal gap tree.children &&
+        localWitnesses? children
+  | .column gap children =>
+      let tree := (CheckedLayout.column gap children).evaluate
+      tree.immediateChildrenFitWithin? &&
+        adjacentSeparatedAlong? .vertical gap tree.children &&
+        localWitnesses? children
+  | .padding insets child =>
+      let tree := (CheckedLayout.padding insets child).evaluate
+      tree.immediateChildrenFitWithin? && localWitness? child
+  | .frame extent child =>
+      let tree := (CheckedLayout.frame extent child).evaluate
+      decide (child.extent.fitsWithin extent) && tree.immediateChildrenFitWithin? && localWitness? child
+
+def localWitnesses? : List CheckedLayout → Bool
+  | [] => true
+  | child :: rest => localWitness? child && localWitnesses? rest
+
+end
+
 theorem evaluateAt_row_childrenAdjacentSeparated
     (gap : Gap)
     (children : List CheckedLayout)

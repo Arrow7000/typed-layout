@@ -44,6 +44,7 @@ The current Lean development already contains proofs/examples for:
 - generic row adjacency/separation
 - generic column adjacency/separation
 - executable boolean checks for adjacency/separation
+- executable per-layout local witness checks (`CheckedLayout.localWitness?`)
 - generic padding child containment
 - generic framed-leaf child containment when a fit proof is supplied
 - concrete row child containment checks via `immediateChildrenFitWithin?`

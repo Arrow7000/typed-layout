@@ -65,6 +65,10 @@ theorem exactRowChildrenFitWithin :
     exactRowCheckedLayout.evaluate.immediateChildrenFitWithin? = true := by
   native_decide
 
+theorem exactRowLocalWitness :
+    exactRowCheckedLayout.localWitness? = true := by
+  native_decide
+
 def tooWideRowLayout : Layout :=
   .row { amount := 10 }
     [ .leaf { width := 150, height := 10 }
@@ -123,6 +127,10 @@ theorem exactColumnChildrenSeparatedBool :
 
 theorem exactColumnChildrenFitWithin :
     exactColumnCheckedLayout.evaluate.immediateChildrenFitWithin? = true := by
+  native_decide
+
+theorem exactColumnLocalWitness :
+    exactColumnCheckedLayout.localWitness? = true := by
   native_decide
 
 def paddedLeafCheckedLayout : CheckedLayout :=
@@ -257,5 +265,9 @@ theorem nestedFrameRowPaddingChildFits :
           ]))
       Origin.zero
       fits
+
+theorem nestedFrameRowLocalWitness :
+    nestedFrameRowCheckedLayout.localWitness? = true := by
+  native_decide
 
 end TypedLayout.Core.Examples
