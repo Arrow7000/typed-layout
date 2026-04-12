@@ -47,7 +47,9 @@ The current Lean development already contains proofs/examples for:
 - generic column child containment
 - executable boolean checks for adjacency/separation
 - executable per-layout local witness checks (`CheckedLayout.localWitness?`)
+- soundness/completeness bridges for the main local executable booleans
 - soundness bridges from executable local witnesses back to propositional local facts
+- checker-to-witness bridges showing successful exact checks produce locally-sound checked layouts and `localWitness? = true`
 - generic padding child containment
 - generic framed-leaf child containment when a fit proof is supplied
 - incompatible layouts surfacing the expected checker error shape
@@ -74,9 +76,10 @@ Important boundaries of the current implementation:
    fields.
 
 4. **The local proof story now has a real executable/propositional bridge.**
-   Rows/columns have generic separation and immediate-containment theorems,
-   padding/frame have generic containment theorems, and executable local witness
-   checks now come with soundness theorems back into propositions.
+    Rows/columns have generic separation and immediate-containment theorems,
+    padding/frame have generic containment theorems, and executable local witness
+    checks now come with soundness/completeness links plus a bridge from
+    successful exact checks to `LocalSound` and `localWitness? = true`.
 
 ## What is still missing before CSS work
 

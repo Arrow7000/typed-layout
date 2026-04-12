@@ -101,6 +101,25 @@ theorem adjacentSeparatedAlong?_sound
           simp only [adjacentSeparatedAlong?, AdjacentSeparatedAlong, Bool.and_eq_true] at h ⊢
           exact ⟨of_decide_eq_true h.1, ih h.2⟩
 
+theorem adjacentSeparatedAlong_complete
+    (axis : Axis)
+    (gap : Gap)
+    (children : List GeometryTree) :
+    AdjacentSeparatedAlong axis gap children → adjacentSeparatedAlong? axis gap children = true := by
+  induction children with
+  | nil =>
+      intro _
+      simp [adjacentSeparatedAlong?]
+  | cons first rest ih =>
+      cases rest with
+      | nil =>
+          intro _
+          simp [adjacentSeparatedAlong?]
+      | cons second tail =>
+          intro h
+          rcases h with ⟨hSep, hTail⟩
+          simp [adjacentSeparatedAlong?, hSep, ih hTail]
+
 namespace CheckedLayout
 
 mutual

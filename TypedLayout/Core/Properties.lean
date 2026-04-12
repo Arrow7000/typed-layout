@@ -86,6 +86,25 @@ theorem immediateChildrenFitWithin?_sound (tree : GeometryTree) :
   intro h
   exact childrenFitWithin?_sound tree.box tree.children h
 
+theorem childrenFitWithin?_complete
+    (parent : Box)
+    (children : List GeometryTree) :
+    ChildrenFitWithin parent children →
+      children.all (fun child => decide (child.box.fitsWithin parent)) = true := by
+  induction children with
+  | nil =>
+      intro _
+      simp
+  | cons child rest ih =>
+      intro h
+      rcases h with ⟨headFits, restFits⟩
+      simp [headFits, ih restFits]
+
+theorem immediateChildrenFitWithin?_complete (tree : GeometryTree) :
+    ImmediateChildrenFitWithin tree → tree.immediateChildrenFitWithin? = true := by
+  intro h
+  exact childrenFitWithin?_complete tree.box tree.children h
+
 theorem childrenFitWithin_nil (parent : Box) : ChildrenFitWithin parent [] := by
   trivial
 
@@ -227,6 +246,65 @@ theorem localWitnesses?_sound : ∀ children : List CheckedLayout,
       have h' : localWitness? child = true ∧ localWitnesses? rest = true := by
         simpa [localWitnesses?, Bool.and_eq_true] using h
       exact ⟨localWitness?_sound child h'.1, localWitnesses?_sound rest h'.2⟩
+
+theorem localWitness?_complete : ∀ layout : CheckedLayout,
+    LocalSound layout → localWitness? layout = true
+  | .leaf _, _ => by
+      simp [localWitness?]
+  | .row gap children, h => by
+      rcases h with ⟨hWithin, hAdj, hChildren⟩
+      have hWithin' :
+          (CheckedLayout.row gap children).evaluate.immediateChildrenFitWithin? = true :=
+        GeometryTree.immediateChildrenFitWithin?_complete _ hWithin
+      have hAdj' :
+          adjacentSeparatedAlong? .horizontal gap
+            (CheckedLayout.row gap children).evaluate.children = true :=
+        adjacentSeparatedAlong_complete .horizontal gap _ hAdj
+      have hChildren' : localWitnesses? children = true :=
+        localWitnesses?_complete children hChildren
+      simp [localWitness?, hWithin', hAdj', hChildren']
+  | .column gap children, h => by
+      rcases h with ⟨hWithin, hAdj, hChildren⟩
+      have hWithin' :
+          (CheckedLayout.column gap children).evaluate.immediateChildrenFitWithin? = true :=
+        GeometryTree.immediateChildrenFitWithin?_complete _ hWithin
+      have hAdj' :
+          adjacentSeparatedAlong? .vertical gap
+            (CheckedLayout.column gap children).evaluate.children = true :=
+        adjacentSeparatedAlong_complete .vertical gap _ hAdj
+      have hChildren' : localWitnesses? children = true :=
+        localWitnesses?_complete children hChildren
+      simp [localWitness?, hWithin', hAdj', hChildren']
+  | .padding insets child, h => by
+      rcases h with ⟨hWithin, hChild⟩
+      have hWithin' :
+          (CheckedLayout.padding insets child).evaluate.immediateChildrenFitWithin? = true :=
+        GeometryTree.immediateChildrenFitWithin?_complete _ hWithin
+      have hChild' : localWitness? child = true :=
+        localWitness?_complete child hChild
+      simp [localWitness?, hWithin', hChild']
+  | .frame extent child, h => by
+      rcases h with ⟨hFit, hWithin, hChild⟩
+      have hFit' : decide (child.extent.fitsWithin extent) = true := by
+        simp [hFit]
+      have hWithin' :
+          (CheckedLayout.frame extent child).evaluate.immediateChildrenFitWithin? = true :=
+        GeometryTree.immediateChildrenFitWithin?_complete _ hWithin
+      have hChild' : localWitness? child = true :=
+        localWitness?_complete child hChild
+      simp [localWitness?, hFit', hWithin', hChild']
+
+theorem localWitnesses?_complete : ∀ children : List CheckedLayout,
+    LocalSounds children → localWitnesses? children = true
+  | [], _ => by
+      simp [localWitnesses?]
+  | child :: rest, h => by
+      rcases h with ⟨hChild, hRest⟩
+      have hChild' : localWitness? child = true :=
+        localWitness?_complete child hChild
+      have hRest' : localWitnesses? rest = true :=
+        localWitnesses?_complete rest hRest
+      simp [localWitnesses?, hChild', hRest']
 
 end
 
@@ -409,6 +487,185 @@ theorem evaluateAt_frame_immediateChildrenFitWithin
   rw [CheckedLayout.evaluateAt_box child origin]
   have h' := Box.sameOriginFitsWithin_of_extentFits origin h
   simpa [CheckedLayout.extent] using h'
+
+mutual
+
+theorem checkWithin_localSound :
+    ∀ (available : AvailableSpace) (layout : Layout),
+      match checkWithin available layout with
+      | .exact checked => CheckedLayout.LocalSound checked.layout
+      | .incompatible _ => True
+  | available, .leaf extent => by
+      by_cases fits : extent.fitsWithin available.extent
+      · simp [checkWithin, fits, CheckedLayout.LocalSound]
+      · simp [checkWithin, fits]
+  | available, .row gap children => by
+      cases hChildren : checkChildrenWithin available children with
+      | incompatible error =>
+          simp [checkWithin, hChildren]
+      | exact checkedChildren =>
+          by_cases fits :
+              (CheckedLayout.row gap (CheckedWithin.childLayouts checkedChildren)).extent.fitsWithin
+                available.extent
+          · have hChildrenSound :
+                CheckedLayout.LocalSounds (CheckedWithin.childLayouts checkedChildren) := by
+              simpa [hChildren] using checkChildrenWithin_localSounds available children
+            have hWithin :
+                ImmediateChildrenFitWithin
+                  (CheckedLayout.row gap (CheckedWithin.childLayouts checkedChildren)).evaluate := by
+              simpa [CheckedLayout.evaluate] using
+                evaluateAt_row_immediateChildrenFitWithin gap
+                  (CheckedWithin.childLayouts checkedChildren) Origin.zero
+            have hAdj :
+                AdjacentSeparatedAlong .horizontal gap
+                  (CheckedLayout.row gap (CheckedWithin.childLayouts checkedChildren)).evaluate.children := by
+              simpa [CheckedLayout.evaluate] using
+                evaluateAt_row_childrenAdjacentSeparated gap
+                  (CheckedWithin.childLayouts checkedChildren) Origin.zero
+            have hLocal :
+                CheckedLayout.LocalSound
+                  (CheckedLayout.row gap (CheckedWithin.childLayouts checkedChildren)) :=
+              ⟨hWithin, ⟨hAdj, hChildrenSound⟩⟩
+            simpa [checkWithin, hChildren, fits] using hLocal
+          · simp [checkWithin, hChildren, fits]
+  | available, .column gap children => by
+      cases hChildren : checkChildrenWithin available children with
+      | incompatible error =>
+          simp [checkWithin, hChildren]
+      | exact checkedChildren =>
+          by_cases fits :
+              (CheckedLayout.column gap (CheckedWithin.childLayouts checkedChildren)).extent.fitsWithin
+                available.extent
+          · have hChildrenSound :
+                CheckedLayout.LocalSounds (CheckedWithin.childLayouts checkedChildren) := by
+              simpa [hChildren] using checkChildrenWithin_localSounds available children
+            have hWithin :
+                ImmediateChildrenFitWithin
+                  (CheckedLayout.column gap (CheckedWithin.childLayouts checkedChildren)).evaluate := by
+              simpa [CheckedLayout.evaluate] using
+                evaluateAt_column_immediateChildrenFitWithin gap
+                  (CheckedWithin.childLayouts checkedChildren) Origin.zero
+            have hAdj :
+                AdjacentSeparatedAlong .vertical gap
+                  (CheckedLayout.column gap (CheckedWithin.childLayouts checkedChildren)).evaluate.children := by
+              simpa [CheckedLayout.evaluate] using
+                evaluateAt_column_childrenAdjacentSeparated gap
+                  (CheckedWithin.childLayouts checkedChildren) Origin.zero
+            have hLocal :
+                CheckedLayout.LocalSound
+                  (CheckedLayout.column gap (CheckedWithin.childLayouts checkedChildren)) :=
+              ⟨hWithin, ⟨hAdj, hChildrenSound⟩⟩
+            simpa [checkWithin, hChildren, fits] using hLocal
+          · simp [checkWithin, hChildren, fits]
+  | available, .padding insets child => by
+      cases hInset : available.extent.inset? insets with
+      | none =>
+          simp [checkWithin, hInset]
+      | some innerExtent =>
+          cases hChild : checkWithin { extent := innerExtent } child with
+          | incompatible error =>
+              simp [checkWithin, hInset, hChild]
+          | exact checkedChild =>
+              by_cases fits :
+                  (CheckedLayout.padding insets checkedChild.layout).extent.fitsWithin available.extent
+              · have hChildSound : CheckedLayout.LocalSound checkedChild.layout := by
+                  simpa [hChild] using
+                    checkWithin_localSound ({ extent := innerExtent } : AvailableSpace) child
+                have hWithin :
+                    ImmediateChildrenFitWithin
+                      (CheckedLayout.padding insets checkedChild.layout).evaluate := by
+                  simpa [CheckedLayout.evaluate] using
+                    evaluateAt_padding_immediateChildrenFitWithin insets checkedChild.layout Origin.zero
+                have hLocal :
+                    CheckedLayout.LocalSound (CheckedLayout.padding insets checkedChild.layout) :=
+                  ⟨hWithin, hChildSound⟩
+                simpa [checkWithin, hInset, hChild, fits] using hLocal
+              · simp [checkWithin, hInset, hChild, fits]
+  | available, .frame extent child => by
+      by_cases frameFits : extent.fitsWithin available.extent
+      · cases hChild : checkWithin { extent := extent } child with
+        | incompatible error =>
+            simp [checkWithin, frameFits, hChild]
+        | exact checkedChild =>
+            have hChildSound : CheckedLayout.LocalSound checkedChild.layout := by
+              simpa [hChild] using checkWithin_localSound ({ extent := extent } : AvailableSpace) child
+            have hWithin :
+                ImmediateChildrenFitWithin (CheckedLayout.frame extent checkedChild.layout).evaluate := by
+              simpa [CheckedLayout.evaluate] using
+                evaluateAt_frame_immediateChildrenFitWithin extent checkedChild.layout Origin.zero
+                  checkedChild.fits
+            have hLocal : CheckedLayout.LocalSound (CheckedLayout.frame extent checkedChild.layout) :=
+              ⟨checkedChild.fits, ⟨hWithin, hChildSound⟩⟩
+            simpa [checkWithin, frameFits, hChild] using hLocal
+      · simp [checkWithin, frameFits]
+
+theorem checkChildrenWithin_localSounds :
+    ∀ (available : AvailableSpace) (children : List Layout),
+      match checkChildrenWithin available children with
+      | .exact checkedChildren => CheckedLayout.LocalSounds (CheckedWithin.childLayouts checkedChildren)
+      | .incompatible _ => True
+  | available, [] => by
+      simp [checkChildrenWithin, CheckedWithin.childLayouts, CheckedLayout.LocalSounds]
+  | available, child :: rest => by
+      cases hChild : checkWithin available child with
+      | incompatible error =>
+          simp [checkChildrenWithin, hChild]
+      | exact checkedChild =>
+          cases hRest : checkChildrenWithin available rest with
+          | incompatible error =>
+              simp [checkChildrenWithin, hChild, hRest]
+          | exact checkedRest =>
+              have hChildSound : CheckedLayout.LocalSound checkedChild.layout := by
+                simpa [hChild] using checkWithin_localSound available child
+              have hRestSound : CheckedLayout.LocalSounds (CheckedWithin.childLayouts checkedRest) := by
+                simpa [hRest] using checkChildrenWithin_localSounds available rest
+              have hLocal :
+                  CheckedLayout.LocalSounds (CheckedWithin.childLayouts (checkedChild :: checkedRest)) := by
+                simpa [CheckedWithin.childLayouts, CheckedLayout.LocalSounds] using
+                  (show CheckedLayout.LocalSound checkedChild.layout ∧
+                      CheckedLayout.LocalSounds (CheckedWithin.childLayouts checkedRest) from
+                    ⟨hChildSound, hRestSound⟩)
+              simpa [checkChildrenWithin, hChild, hRest] using hLocal
+
+end
+
+theorem check_localSound
+    (available : AvailableSpace)
+    (layout : Layout) :
+    match check available layout with
+    | .exact checked => CheckedLayout.LocalSound checked.layout
+    | .incompatible _ => True := by
+  simpa [check] using checkWithin_localSound available layout
+
+theorem check_localWitness
+    (available : AvailableSpace)
+    (layout : Layout) :
+    match check available layout with
+    | .exact checked => checked.layout.localWitness? = true
+    | .incompatible _ => True := by
+  cases h : check available layout with
+  | incompatible error =>
+      trivial
+  | exact checked =>
+      have hLocal : CheckedLayout.LocalSound checked.layout := by
+        simpa [h] using check_localSound available layout
+      exact localWitness?_complete checked.layout hLocal
+
+theorem check_exact_localSound
+    {available : AvailableSpace}
+    {layout : Layout}
+    {checked : CheckedWithin available}
+    (h : check available layout = .exact checked) :
+    CheckedLayout.LocalSound checked.layout := by
+  simpa [h] using check_localSound available layout
+
+theorem check_exact_localWitness
+    {available : AvailableSpace}
+    {layout : Layout}
+    {checked : CheckedWithin available}
+    (h : check available layout = .exact checked) :
+    checked.layout.localWitness? = true := by
+  simpa [h] using check_localWitness available layout
 
 end CheckedLayout
 
