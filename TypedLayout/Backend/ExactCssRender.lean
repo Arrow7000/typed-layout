@@ -2,6 +2,22 @@ import TypedLayout.Backend.ExactCss
 
 namespace TypedLayout.Backend.ExactCss
 
+open TypedLayout.Core
+
+private theorem exact_of_map_eq_exact
+    {α β : Type _}
+    {result : CheckResult α}
+    {f : α → β}
+    {output : β}
+    (h : CheckResult.map f result = .exact output) :
+    ∃ value, result = .exact value ∧ f value = output := by
+  cases result with
+  | incompatible error =>
+      simp [CheckResult.map] at h
+  | exact value =>
+      refine ⟨value, rfl, ?_⟩
+      simpa [CheckResult.map] using h
+
 private def joinWith (separator : String) : List String → String
   | [] => ""
   | [part] => part
@@ -248,5 +264,160 @@ theorem renderedDocument_eq_document_render (artifact : Artifact) :
   rfl
 
 end Artifact
+
+/-- Check and, on exact success, lower straight to a rendered exact document via
+the typed artifact/document pipeline. -/
+def checkWithinRenderedDocument (available : AvailableSpace) (layout : Layout) :
+    CheckResult ExactDocument.RenderedDocument :=
+  (checkWithinArtifact available layout).map Artifact.renderedDocument
+
+/-- Alias of `checkWithinRenderedDocument` at the public exact-check boundary. -/
+def checkRenderedDocument (available : AvailableSpace) (layout : Layout) :
+    CheckResult ExactDocument.RenderedDocument :=
+  (checkArtifact available layout).map Artifact.renderedDocument
+
+/-- Check and, on exact success, lower straight to rendered HTML text via the
+typed artifact/document pipeline. -/
+def checkWithinRenderHtml (available : AvailableSpace) (layout : Layout) :
+    CheckResult String :=
+  (checkWithinArtifact available layout).map Artifact.renderHtml
+
+/-- Alias of `checkWithinRenderHtml` at the public exact-check boundary. -/
+def checkRenderHtml (available : AvailableSpace) (layout : Layout) :
+    CheckResult String :=
+  (checkArtifact available layout).map Artifact.renderHtml
+
+/-- Check and, on exact success, lower straight to rendered CSS text via the
+typed artifact/document pipeline. -/
+def checkWithinRenderCss (available : AvailableSpace) (layout : Layout) :
+    CheckResult String :=
+  (checkWithinArtifact available layout).map Artifact.renderCss
+
+/-- Alias of `checkWithinRenderCss` at the public exact-check boundary. -/
+def checkRenderCss (available : AvailableSpace) (layout : Layout) :
+    CheckResult String :=
+  (checkArtifact available layout).map Artifact.renderCss
+
+theorem checkWithinRenderedDocument_exact_artifact
+    {available : AvailableSpace}
+    {layout : Layout}
+    {rendered : ExactDocument.RenderedDocument}
+    (h : checkWithinRenderedDocument available layout = .exact rendered) :
+    ∃ artifact : Artifact,
+      checkWithinArtifact available layout = .exact artifact ∧
+      artifact.renderedDocument = rendered := by
+  rcases exact_of_map_eq_exact
+      (result := checkWithinArtifact available layout)
+      (f := Artifact.renderedDocument)
+      (output := rendered)
+      (by simpa [checkWithinRenderedDocument] using h)
+    with ⟨artifact, hArtifact, hRendered⟩
+  exact ⟨artifact, hArtifact, hRendered⟩
+
+theorem checkWithinRenderedDocument_exact_document
+    {available : AvailableSpace}
+    {layout : Layout}
+    {rendered : ExactDocument.RenderedDocument}
+    (h : checkWithinRenderedDocument available layout = .exact rendered) :
+    ∃ artifact : Artifact,
+      checkWithinArtifact available layout = .exact artifact ∧
+      artifact.document.render = rendered := by
+  rcases checkWithinRenderedDocument_exact_artifact h with ⟨artifact, hArtifact, hRendered⟩
+  refine ⟨artifact, hArtifact, ?_⟩
+  rw [Artifact.renderedDocument_eq_document_render artifact] at hRendered
+  exact hRendered
+
+theorem checkWithinRenderHtml_exact_artifact
+    {available : AvailableSpace}
+    {layout : Layout}
+    {html : String}
+    (h : checkWithinRenderHtml available layout = .exact html) :
+    ∃ artifact : Artifact,
+      checkWithinArtifact available layout = .exact artifact ∧
+      artifact.renderHtml = html := by
+  rcases exact_of_map_eq_exact
+      (result := checkWithinArtifact available layout)
+      (f := Artifact.renderHtml)
+      (output := html)
+      (by simpa [checkWithinRenderHtml] using h)
+    with ⟨artifact, hArtifact, hHtml⟩
+  exact ⟨artifact, hArtifact, hHtml⟩
+
+theorem checkWithinRenderCss_exact_artifact
+    {available : AvailableSpace}
+    {layout : Layout}
+    {css : String}
+    (h : checkWithinRenderCss available layout = .exact css) :
+    ∃ artifact : Artifact,
+      checkWithinArtifact available layout = .exact artifact ∧
+      artifact.renderCss = css := by
+  rcases exact_of_map_eq_exact
+      (result := checkWithinArtifact available layout)
+      (f := Artifact.renderCss)
+      (output := css)
+      (by simpa [checkWithinRenderCss] using h)
+    with ⟨artifact, hArtifact, hCss⟩
+  exact ⟨artifact, hArtifact, hCss⟩
+
+theorem checkRenderedDocument_exact_artifact
+    {available : AvailableSpace}
+    {layout : Layout}
+    {rendered : ExactDocument.RenderedDocument}
+    (h : checkRenderedDocument available layout = .exact rendered) :
+    ∃ artifact : Artifact,
+      checkArtifact available layout = .exact artifact ∧
+      artifact.renderedDocument = rendered := by
+  rcases exact_of_map_eq_exact
+      (result := checkArtifact available layout)
+      (f := Artifact.renderedDocument)
+      (output := rendered)
+      (by simpa [checkRenderedDocument] using h)
+    with ⟨artifact, hArtifact, hRendered⟩
+  exact ⟨artifact, hArtifact, hRendered⟩
+
+theorem checkRenderedDocument_exact_document
+    {available : AvailableSpace}
+    {layout : Layout}
+    {rendered : ExactDocument.RenderedDocument}
+    (h : checkRenderedDocument available layout = .exact rendered) :
+    ∃ artifact : Artifact,
+      checkArtifact available layout = .exact artifact ∧
+      artifact.document.render = rendered := by
+  rcases checkRenderedDocument_exact_artifact h with ⟨artifact, hArtifact, hRendered⟩
+  refine ⟨artifact, hArtifact, ?_⟩
+  rw [Artifact.renderedDocument_eq_document_render artifact] at hRendered
+  exact hRendered
+
+theorem checkRenderHtml_exact_artifact
+    {available : AvailableSpace}
+    {layout : Layout}
+    {html : String}
+    (h : checkRenderHtml available layout = .exact html) :
+    ∃ artifact : Artifact,
+      checkArtifact available layout = .exact artifact ∧
+      artifact.renderHtml = html := by
+  rcases exact_of_map_eq_exact
+      (result := checkArtifact available layout)
+      (f := Artifact.renderHtml)
+      (output := html)
+      (by simpa [checkRenderHtml] using h)
+    with ⟨artifact, hArtifact, hHtml⟩
+  exact ⟨artifact, hArtifact, hHtml⟩
+
+theorem checkRenderCss_exact_artifact
+    {available : AvailableSpace}
+    {layout : Layout}
+    {css : String}
+    (h : checkRenderCss available layout = .exact css) :
+    ∃ artifact : Artifact,
+      checkArtifact available layout = .exact artifact ∧
+      artifact.renderCss = css := by
+  rcases exact_of_map_eq_exact
+      (result := checkArtifact available layout)
+      (f := Artifact.renderCss)
+      (output := css)
+      (by simpa [checkRenderCss] using h)
+    with ⟨artifact, hArtifact, hCss⟩
+  exact ⟨artifact, hArtifact, hCss⟩
 
 end TypedLayout.Backend.ExactCss

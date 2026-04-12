@@ -87,6 +87,9 @@ theorem framedLeafNodeStyle :
 def exactRowArtifact : Artifact :=
   Artifact.ofCertifiedWithin exactRowCertified
 
+def framedLeafArtifact : Artifact :=
+  Artifact.ofCertifiedWithin framedLeafCertified
+
 theorem exactRowArtifactMetadata :
     exactRowArtifact =
       { targetProfile := .exact1D_v1
@@ -176,6 +179,40 @@ theorem exactRowRenderedDocumentMatchesArtifact :
     exactRowArtifact.renderedDocument = exactRowRenderedDocument := by
   native_decide
 
+theorem exactRowCheckWithinRenderedDocumentExact :
+    checkWithinRenderedDocument exactRowAvailable exactRowLayout = .exact exactRowRenderedDocument := by
+  native_decide
+
+theorem exactRowCheckRenderedDocumentExact :
+    checkRenderedDocument exactRowAvailable exactRowLayout = .exact exactRowRenderedDocument := by
+  native_decide
+
+theorem exactRowRenderedDocumentRecoveredFromCheck :
+    ∃ artifact : Artifact,
+      checkArtifact exactRowAvailable exactRowLayout = .exact artifact ∧
+      artifact.document.render = exactRowRenderedDocument := by
+  exact checkRenderedDocument_exact_document exactRowCheckRenderedDocumentExact
+
+theorem exactRowCheckRenderHtmlExact :
+    checkRenderHtml exactRowAvailable exactRowLayout = .exact exactRowRenderedDocument.html := by
+  native_decide
+
+theorem exactRowRenderedHtmlRecoveredFromCheck :
+    ∃ artifact : Artifact,
+      checkArtifact exactRowAvailable exactRowLayout = .exact artifact ∧
+      artifact.renderHtml = exactRowRenderedDocument.html := by
+  exact checkRenderHtml_exact_artifact exactRowCheckRenderHtmlExact
+
+theorem exactRowCheckRenderCssExact :
+    checkRenderCss exactRowAvailable exactRowLayout = .exact exactRowRenderedDocument.css := by
+  native_decide
+
+theorem exactRowRenderedCssRecoveredFromCheck :
+    ∃ artifact : Artifact,
+      checkArtifact exactRowAvailable exactRowLayout = .exact artifact ∧
+      artifact.renderCss = exactRowRenderedDocument.css := by
+  exact checkRenderCss_exact_artifact exactRowCheckRenderCssExact
+
 theorem exactRowRenderedHtml :
     exactRowRenderedDocument.html =
       "<body><div class=\"tl-0\"><div class=\"tl-1\"></div><div class=\"tl-2\"></div><div class=\"tl-3\"></div></div></body>" := by
@@ -191,6 +228,21 @@ theorem exactRowRenderedCss :
 
 def paddedLeafRenderedDocument : ExactDocument.RenderedDocument :=
   paddedLeafDocument.render
+
+def framedLeafRenderedDocument : ExactDocument.RenderedDocument :=
+  framedLeafArtifact.renderedDocument
+
+theorem framedLeafCheckRenderedDocumentExact :
+    checkRenderedDocument framedLeafAvailable framedLeafLayout = .exact framedLeafRenderedDocument := by
+  native_decide
+
+theorem framedLeafCheckRenderHtmlExact :
+    checkRenderHtml framedLeafAvailable framedLeafLayout = .exact framedLeafRenderedDocument.html := by
+  native_decide
+
+theorem framedLeafCheckRenderCssExact :
+    checkRenderCss framedLeafAvailable framedLeafLayout = .exact framedLeafRenderedDocument.css := by
+  native_decide
 
 theorem paddedLeafRenderedHtml :
     paddedLeafRenderedDocument.html =

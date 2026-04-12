@@ -17,6 +17,7 @@ This note records what the current Lean core actually covers right now.
 - `TypedLayout/Core/Contract.lean`
 - `TypedLayout/Core/Examples.lean`
 - `TypedLayout/Backend/ExactCss.lean`
+- `TypedLayout/Backend/ExactCssRender.lean`
 - `TypedLayout/Backend/ExactCssExamples.lean`
 
 ## Current implemented fragment
@@ -51,6 +52,10 @@ The implemented exact fragment currently includes:
   frame lowering from checked/certified layouts
 - direct `checkWithinArtifact` / `checkArtifact` helpers for lowering successful
   exact checks straight to backend artifacts
+- direct `checkWithinRenderedDocument` / `checkRenderedDocument`,
+  `checkWithinRenderHtml` / `checkRenderHtml`, and `checkWithinRenderCss` /
+  `checkRenderCss` helpers that keep successful exact checks routed through the
+  typed artifact/document pipeline all the way to final rendered output
 - a tiny typed exact-fragment HTML/CSS document IR with generated-class
   stylesheet rules and `body`/`div` element trees lowered from backend nodes and
   artifacts without raw string emission
@@ -87,6 +92,9 @@ The current Lean development already contains proofs/examples for:
 - artifact-bridge theorems showing successful exact artifact lowering recovers
   the blessed target profile, exact source guarantee, output-bounds-within-input
   bounds, and checked/certified root correspondence facts
+- rendered-output bridge theorems showing successful exact rendered-document /
+  HTML / CSS helpers still recover the backend artifact/document provenance they
+  came from
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
 - bridges showing the exposed summary invariants are backed by `LocalSound`
