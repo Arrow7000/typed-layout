@@ -36,6 +36,13 @@ def mainExtent (layout : CheckedLayout) (axis : Axis) : Nat :=
 def crossExtent (layout : CheckedLayout) (axis : Axis) : Nat :=
   layout.extent.cross axis
 
+def extentBounds (layout : CheckedLayout) : ExtentBounds :=
+  layout.extent.toBounds
+
+theorem extentBounds_contains_extent (layout : CheckedLayout) :
+    layout.extentBounds.contains layout.extent :=
+  ExactExtent.toBounds_contains_self layout.extent
+
 end CheckedLayout
 
 structure CheckedWithin (available : AvailableSpace) where
@@ -49,6 +56,14 @@ def extent {available : AvailableSpace} (checked : CheckedWithin available) : Ex
 
 def childLayouts {available : AvailableSpace} (children : List (CheckedWithin available)) : List CheckedLayout :=
   children.map CheckedWithin.layout
+
+def extentBounds {available : AvailableSpace} (checked : CheckedWithin available) : ExtentBounds :=
+  checked.extent.toBounds
+
+theorem extentBounds_within_availableBounds {available : AvailableSpace}
+    (checked : CheckedWithin available) :
+    available.bounds.containsBounds checked.extentBounds := by
+  exact ⟨⟨Nat.zero_le _, checked.fits.1⟩, ⟨Nat.zero_le _, checked.fits.2⟩⟩
 
 end CheckedWithin
 

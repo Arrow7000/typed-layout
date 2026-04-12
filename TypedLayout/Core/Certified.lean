@@ -20,9 +20,17 @@ def layout {available : AvailableSpace} (certified : CertifiedWithin available) 
 def extent {available : AvailableSpace} (certified : CertifiedWithin available) : ExactExtent :=
   certified.layout.extent
 
+def extentBounds {available : AvailableSpace} (certified : CertifiedWithin available) : ExtentBounds :=
+  certified.extent.toBounds
+
 theorem fits {available : AvailableSpace} (certified : CertifiedWithin available) :
     certified.layout.extent.fitsWithin available.extent :=
   certified.checked.fits
+
+theorem extentBounds_within_availableBounds {available : AvailableSpace}
+    (certified : CertifiedWithin available) :
+    available.bounds.containsBounds certified.extentBounds :=
+  certified.checked.extentBounds_within_availableBounds
 
 def ofChecked {available : AvailableSpace}
     (checked : CheckedWithin available)

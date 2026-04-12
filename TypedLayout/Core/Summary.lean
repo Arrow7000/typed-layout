@@ -45,6 +45,9 @@ structure ExactLayoutSummary where
 
 namespace ExactLayoutSummary
 
+def extentBounds (summary : ExactLayoutSummary) : ExtentBounds :=
+  summary.extent.toBounds
+
 def ofCheckedLayout : CheckedLayout → ExactLayoutSummary
   | .leaf extent =>
       { kind := .leaf
@@ -106,6 +109,10 @@ theorem ofCheckedLayout_kind (layout : CheckedLayout) :
 theorem ofCheckedLayout_extent (layout : CheckedLayout) :
     (ofCheckedLayout layout).extent = layout.extent := by
   cases layout <;> simp [ofCheckedLayout, CheckedLayout.extent]
+
+theorem ofCheckedLayout_extentBounds (layout : CheckedLayout) :
+    (ofCheckedLayout layout).extentBounds = layout.extent.toBounds := by
+  simp [extentBounds, ofCheckedLayout_extent]
 
 theorem ofCheckedLayout_guarantee (layout : CheckedLayout) :
     (ofCheckedLayout layout).guarantee = .exact := by

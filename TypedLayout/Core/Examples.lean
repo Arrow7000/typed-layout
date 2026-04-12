@@ -1,4 +1,4 @@
-import TypedLayout.Core.Summary
+import TypedLayout.Core.Contract
 
 namespace TypedLayout.Core.Examples
 
@@ -24,6 +24,17 @@ def exactRowCheckedLayout : CheckedLayout :=
 def exactRowExpectedExtent : ExactExtent :=
   { width := 470, height := 30 }
 
+def roomyWidthBounds : AxisBounds :=
+  AxisBounds.upTo 120
+
+theorem roomyWidthBoundsContains100 :
+    roomyWidthBounds.contains 100 := by
+  native_decide
+
+theorem roomyWidthBoundsCompatibleWithExact100 :
+    roomyWidthBounds.compatibleWith (AxisBounds.exact 100) := by
+  native_decide
+
 theorem exactRowComputedExtent :
     ExactExtent.stack .horizontal { amount := 10 }
       [ { width := 100, height := 20 }
@@ -34,6 +45,10 @@ theorem exactRowComputedExtent :
 
 theorem exactRowExpectedFits : exactRowExpectedExtent.fitsWithin exactRowAvailable.extent := by
   native_decide
+
+theorem exactRowExpectedExtentWithinAvailableBounds :
+    exactRowAvailable.bounds.contains exactRowExpectedExtent := by
+  exact (ExactExtent.fitsWithin_iff_upToBounds_contains).mp exactRowExpectedFits
 
 theorem exactRowExtent :
     exactRowCheckedLayout.extent = exactRowExpectedExtent := by
@@ -127,12 +142,25 @@ theorem exactRowSummaryChildExtents :
       ] := by
   native_decide
 
+theorem exactRowSummaryExtentBounds :
+    exactRowSummary.extentBounds = exactRowExpectedExtent.toBounds := by
+  native_decide
+
+theorem exactRowSummaryBoundsWithinAvailable :
+    exactRowAvailable.bounds.containsBounds exactRowSummary.extentBounds := by
+  native_decide
+
 theorem exactRowCertifiedSummaryLocalInvariants :
     exactRowCertified.summary.localInvariants =
       [ .immediateChildrenFitWithin
       , .adjacentChildrenSeparated .horizontal { amount := 10 }
       ] := by
   native_decide
+
+theorem exactRowCertifiedBoundsWithinAvailable :
+    exactRowAvailable.bounds.containsBounds exactRowCertified.extentBounds := by
+  simpa [CertifiedWithin.extentBounds] using
+    CertifiedWithin.extentBounds_within_availableBounds exactRowCertified
 
 theorem exactRowCertifiedSummarySeparated :
     ExactLocalInvariant.Holds
@@ -143,6 +171,61 @@ theorem exactRowCertifiedSummarySeparated :
         exactRowCertified.summary.localInvariants := by
     simp [exactRowCertifiedSummaryLocalInvariants]
   exact CertifiedWithin.summary_invariant_holds exactRowCertified hMem
+
+def exactRowContract : ExactLayoutContract :=
+  exactRowCertified.contract
+
+theorem exactRowCheckContractExact :
+    (checkContract exactRowAvailable exactRowLayout).isExact = true := by
+  native_decide
+
+theorem exactRowContractKind :
+    exactRowContract.kind = .row := by
+  native_decide
+
+theorem exactRowContractInputBounds :
+    exactRowContract.input.bounds = exactRowAvailable.bounds := by
+  simpa [exactRowContract, CertifiedWithin.contract] using
+    ExactLayoutContract.ofCertifiedWithin_input_bounds exactRowCertified
+
+theorem exactRowContractOutputExtent :
+    exactRowContract.output.extent = exactRowExpectedExtent := by
+  native_decide
+
+theorem exactRowContractOutputBounds :
+    exactRowContract.output.bounds = exactRowExpectedExtent.toBounds := by
+  native_decide
+
+theorem exactRowContractGuarantee :
+    exactRowContract.guarantee = .exact := by
+  simpa [exactRowContract, CertifiedWithin.contract] using
+    CertifiedWithin.contract_guarantee exactRowCertified
+
+theorem exactRowContractOutputBoundsWithinInputBounds :
+    exactRowContract.input.bounds.containsBounds exactRowContract.output.bounds := by
+  simpa [exactRowContract, CertifiedWithin.contract] using
+    CertifiedWithin.contract_output_bounds_within_input_bounds exactRowCertified
+
+theorem exactRowContractOutputBoundsContainOutputExtent :
+    exactRowContract.output.bounds.contains exactRowExpectedExtent := by
+  native_decide
+
+theorem exactRowContractLocalInvariants :
+    exactRowContract.localInvariants =
+      [ .immediateChildrenFitWithin
+      , .adjacentChildrenSeparated .horizontal { amount := 10 }
+      ] := by
+  native_decide
+
+theorem exactRowContractSeparatedInvariantHolds :
+    ExactLocalInvariant.Holds
+      (.adjacentChildrenSeparated .horizontal { amount := 10 })
+      exactRowCertified.layout := by
+  have hMem :
+      .adjacentChildrenSeparated .horizontal { amount := 10 } ∈
+        exactRowContract.localInvariants := by
+    simp [exactRowContractLocalInvariants]
+  exact CertifiedWithin.contract_invariant_holds exactRowCertified hMem
 
 def tooWideRowLayout : Layout :=
   .row { amount := 10 }
@@ -300,6 +383,34 @@ theorem framedLeafSummaryFrameChildFits :
   have hMem : .frameChildFitsWithin ∈ framedLeafSummary.localInvariants := by
     simp [framedLeafSummaryLocalInvariants]
   exact CheckedLayout.summary_invariant_holds framedLeafLocalSound hMem
+
+def framedLeafAvailable : AvailableSpace :=
+  { extent := { width := 120, height := 60 } }
+
+def framedLeafCertified : CertifiedWithin framedLeafAvailable :=
+  match h : check { extent := { width := 120, height := 60 } } framedLeafLayout with
+  | .exact checked => by
+      simpa [framedLeafAvailable] using (CertifiedWithin.ofCheck h)
+  | .incompatible error =>
+      False.elim <| by
+        have hExact := framedLeafCheckGuarantee
+        simp [CheckResult.isExact, h] at hExact
+
+def framedLeafContract : ExactLayoutContract :=
+  framedLeafCertified.contract
+
+theorem framedLeafContractLocalInvariants :
+    framedLeafContract.localInvariants =
+      [ .frameChildFitsWithin
+      , .immediateChildrenFitWithin
+      ] := by
+  native_decide
+
+theorem framedLeafContractFrameChildFits :
+    ExactLocalInvariant.Holds .frameChildFitsWithin framedLeafCertified.layout := by
+  have hMem : .frameChildFitsWithin ∈ framedLeafContract.localInvariants := by
+    simp [framedLeafContractLocalInvariants]
+  exact CertifiedWithin.contract_invariant_holds framedLeafCertified hMem
 
 def nestedFrameRowLayout : Layout :=
   .frame { width := 200, height := 80 }
