@@ -41,6 +41,7 @@ before any implementation starts.
 - `docs/design/mvp-core-css-subset.md`
 - `docs/design/blessed-css-profile.md`
 - `docs/design/exact-1d-core-status.md`
+- `docs/design/checked-representation-frontier.md`
 - `docs/design/guarantee-classes.md`
 - `docs/design/canonical-example-layouts.md`
 - `docs/design/decision-gates.md`
