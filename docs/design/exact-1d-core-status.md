@@ -24,6 +24,7 @@ This note records what the current Lean core actually covers right now.
 - `TypedLayout/Backend/ExactCssHarnessCase.lean`
 - `TypedLayout/Backend/ExactCssHarnessRun.lean`
 - `TypedLayout/Backend/ExactCssBrowserTaskPlan.lean`
+- `TypedLayout/Backend/ExactCssBrowserTaskResult.lean`
 - `TypedLayout/Backend/ExactCssExamples.lean`
 
 ## Current implemented fragment
@@ -117,6 +118,9 @@ The implemented exact fragment currently includes:
 - a typed exact browser task-plan layer that derives one future page-load task
   plus ordered probe tasks from those exact harness requests/cases, keeping
   selectors, expected boxes/styles, and probe ordering typed ahead of any runner
+- a typed exact browser task-result layer for successful exact page-load/probe
+  results, derived baseline executions, and pure bridges back into typed
+  observation / protocol-response layers without adding a runner yet
 - a deterministic outer-boundary text projection over exact harness protocol
   requests/responses/handoffs, plus a simple canonical run-transcript rendering
   over the pure corpus/run layer
@@ -202,6 +206,9 @@ The current Lean development already contains proofs/examples for:
 - a typed exact browser task-plan layer showing those request-side probe labels,
   selector orderings, and task counts can now be re-expressed as a pure future
   runner plan without adding IO or browser automation
+- a typed exact browser task-result layer showing those future runner results can
+  now be re-expressed as ordered typed observations and request-aligned protocol
+  responses while counts/selectors/boxes stay coherent for the exact baseline
 - a harness-text projection layer showing those typed protocol values and the
   canonical baseline run can now be rendered as deterministic transcript text
   while strings remain confined to the final outer boundary

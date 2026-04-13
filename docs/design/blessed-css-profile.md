@@ -135,7 +135,11 @@ can consume stable transcript text while the typed protocol/run structures remai
 canonical. On top of that, the exact stack now also derives a typed browser task
 plan from those exact requests/cases, naming one page-load task plus ordered
 generated-selector probe tasks and typed box/style collection slices for a future
-runner, still without implementing the runner itself.
+runner, still without implementing the runner itself. The exact stack now also
+adds a small typed successful task-result layer on top of that plan, so baseline
+page-load/probe executions can be derived from the existing exact observations
+and then bridged back into typed observation documents or full protocol
+responses without making a runner or failure taxonomy canonical too early.
 
 ## 7. Likely next backend questions
 
