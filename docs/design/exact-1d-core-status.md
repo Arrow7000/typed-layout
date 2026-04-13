@@ -109,6 +109,10 @@ The implemented exact fragment currently includes:
 - a typed exact harness corpus/run layer that groups canonical harness cases into
   a pure ordered corpus plus a derived baseline run with case-aligned reports,
   verdicts, and small run/corpus summaries
+- a typed exact harness protocol layer that re-expresses one harness case as a
+  request/response handoff, with typed fixture/rendered-page/expectation/
+  probe-plan request data and typed observation/comparison/report response data,
+  plus small coherence invariants for case/run-derived handoffs
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -184,6 +188,10 @@ The current Lean development already contains proofs/examples for:
 - a typed exact harness corpus/run layer showing the canonical case corpus can
   now be regrouped into a baseline pure run with stable fixture ids, exact-match
   verdict summaries, and zero-issue baseline reports for the current corpus
+- a typed exact harness protocol layer showing those canonical cases/runs can now
+  be lifted again into coherent request/response handoffs, keeping fixture ids,
+  probe labels, counts, guarantees, and verdict/comparison alignment typed ahead
+  of any future external harness boundary
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
 - bridges showing the exposed summary invariants are backed by `LocalSound`
