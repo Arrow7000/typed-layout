@@ -124,6 +124,9 @@ The implemented exact fragment currently includes:
 - a modest typed exact browser task-outcome layer that keeps those successful
   results as the success case while also naming coarse load-page/probe failures
   and success-only bridges back into typed observation / protocol layers
+- a typed exact harness execution-outcome layer that regroups those per-case
+  browser outcomes into harness-facing execution entries and run summaries,
+  preserving successful typed responses/reports while surfacing coarse failures
 - a deterministic outer-boundary text projection over exact harness protocol
   requests/responses/handoffs, plus a simple canonical run-transcript rendering
   over the pure corpus/run layer
@@ -215,6 +218,9 @@ The current Lean development already contains proofs/examples for:
 - a modest typed exact browser task-outcome layer showing those future runner
   results can now be widened to coarse load-page/probe failures while preserving
   the successful observation/protocol bridge for the exact baseline
+- a typed exact harness execution-outcome layer showing those per-case task
+  outcomes can now be regrouped into harness-facing execution summaries without
+  adding runner IO or collapsing successful responses/reports into loose strings
 - a harness-text projection layer showing those typed protocol values and the
   canonical baseline run can now be rendered as deterministic transcript text
   while strings remain confined to the final outer boundary

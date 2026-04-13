@@ -142,7 +142,11 @@ and then bridged back into typed observation documents or full protocol
 responses. On top of that, there is now also a modest typed task-outcome layer
 that keeps those successful results as the success case while adding coarse
 load-page/probe failures for future runner work, without making runner policy or
-fine-grained execution details canonical too early.
+fine-grained execution details canonical too early. On top of that, the exact
+stack now also exposes a typed harness execution-outcome layer that regroups
+those per-case browser outcomes into harness-facing execution entries and run
+summaries, keeping successful typed responses/reports available while still
+surfacing coarse failures explicitly.
 
 ## 7. Likely next backend questions
 
