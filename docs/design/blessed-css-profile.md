@@ -139,7 +139,10 @@ runner, still without implementing the runner itself. The exact stack now also
 adds a small typed successful task-result layer on top of that plan, so baseline
 page-load/probe executions can be derived from the existing exact observations
 and then bridged back into typed observation documents or full protocol
-responses without making a runner or failure taxonomy canonical too early.
+responses. On top of that, there is now also a modest typed task-outcome layer
+that keeps those successful results as the success case while adding coarse
+load-page/probe failures for future runner work, without making runner policy or
+fine-grained execution details canonical too early.
 
 ## 7. Likely next backend questions
 
