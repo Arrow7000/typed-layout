@@ -113,7 +113,11 @@ selector/file text, still without introducing IO or a concrete browser harness.
 That interchange layer now also has a deterministic total text projection over
 fixture refs, expectation/probe/observation/comparison payloads, and full
 bundles, so a future external harness can consume stable string output while the
-typed interchange structures remain canonical.
+typed interchange structures remain canonical. On top of that, the exact stack
+now also exposes a typed harness-case bundle per canonical fixture, collecting
+export identity, rendered standalone page output, exact expectation/probe data,
+seed baseline observation/comparison data, and interchange/text projections into
+one pure harness-facing value.
 
 ## 7. Likely next backend questions
 

@@ -21,6 +21,7 @@ This note records what the current Lean core actually covers right now.
 - `TypedLayout/Backend/ExactCssProbePlan.lean`
 - `TypedLayout/Backend/ExactCssFixtures.lean`
 - `TypedLayout/Backend/ExactCssManifest.lean`
+- `TypedLayout/Backend/ExactCssHarnessCase.lean`
 - `TypedLayout/Backend/ExactCssExamples.lean`
 
 ## Current implemented fragment
@@ -97,6 +98,10 @@ The implemented exact fragment currently includes:
   future external harness, still without doing any IO yet
 - a deterministic total text projection over those exact interchange payloads,
   keeping stringly output confined to the final outer boundary
+- a typed exact harness-case layer that bundles each canonical fixture's export
+  identity, rendered standalone page, exact expectation/probe data, seeded
+  baseline observation/comparison, and interchange/text views into one pure
+  harness-facing case value
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -163,6 +168,9 @@ The current Lean development already contains proofs/examples for:
 - a total outer-boundary text projection layer showing those typed interchange
   payloads can now be rendered for harness consumption without making strings
   canonical inside the typed pipeline
+- a typed harness-case layer showing the canonical exact fixture corpus can now
+  be re-packaged per fixture into coherent harness-facing bundles without
+  introducing IO or loosening the typed artifact/probe/comparison boundary
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
 - bridges showing the exposed summary invariants are backed by `LocalSound`
