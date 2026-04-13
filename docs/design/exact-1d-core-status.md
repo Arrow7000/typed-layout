@@ -92,6 +92,9 @@ The implemented exact fragment currently includes:
 - a typed exact browser-observation layer for ordered per-target observed boxes
   and style slices, plus typed comparison results against exact probe plans,
   still without introducing browser automation yet
+- a typed exact interchange boundary that packages fixture/export identifiers with
+  structured expectation / probe-plan / observation / comparison payloads for a
+  future external harness, still without doing any IO yet
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -152,6 +155,9 @@ The current Lean development already contains proofs/examples for:
   paired with ordered observed targets and compared back to the expected exact
   boxes/styles without falling back to ad-hoc strings, with fixture-level exact
   match examples and a small shifted-observation mismatch example
+- a typed interchange layer showing fixture/export identifiers, generated-class
+  labels, selectors, counts, and exact-match/mismatch comparison outcomes all
+  survive projection to a future harness-facing boundary
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
 - bridges showing the exposed summary invariants are backed by `LocalSound`

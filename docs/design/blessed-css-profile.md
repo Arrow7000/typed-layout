@@ -106,7 +106,10 @@ proof, and it does not by itself upgrade any result to `Conditional(profile)`.
 The repository now also carries a typed exact browser-observation layer for
 ordered observed boxes/style slices plus typed comparisons against probe plans,
 so future harness work can stay inside a typed expectation/observation/result
-boundary instead of dropping immediately to loose string inspection.
+boundary instead of dropping immediately to loose string inspection. On top of
+that, the exact stack now has a small interchange boundary that packages those
+payloads together with stable fixture/export identifiers and outer-boundary
+selector/file text, still without introducing IO or a concrete browser harness.
 
 ## 7. Likely next backend questions
 
