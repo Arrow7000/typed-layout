@@ -18,4 +18,5 @@ import TypedLayout.Backend.ExactCssManifest
 import TypedLayout.Backend.ExactCssInterchange
 import TypedLayout.Backend.ExactCssInterchangeText
 import TypedLayout.Backend.ExactCssHarnessCase
+import TypedLayout.Backend.ExactCssVerdict
 import TypedLayout.Backend.ExactCssExamples

@@ -117,7 +117,10 @@ typed interchange structures remain canonical. On top of that, the exact stack
 now also exposes a typed harness-case bundle per canonical fixture, collecting
 export identity, rendered standalone page output, exact expectation/probe data,
 seed baseline observation/comparison data, and interchange/text projections into
-one pure harness-facing value.
+one pure harness-facing value. The exact stack now also derives a typed
+verdict/report layer over those exact comparison results, summarizing exact
+match vs mismatch, count totals, target-level issues, and stable fixture linkage
+without collapsing back to plain strings.
 
 ## 7. Likely next backend questions
 

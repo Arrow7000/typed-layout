@@ -102,6 +102,9 @@ The implemented exact fragment currently includes:
   identity, rendered standalone page, exact expectation/probe data, seeded
   baseline observation/comparison, and interchange/text views into one pure
   harness-facing case value
+- a typed verdict/report layer that summarizes exact comparison results into
+  exact-match/mismatch outcomes, count summaries, typed target issues, and
+  fixture-linked harness-facing reports
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -171,6 +174,9 @@ The current Lean development already contains proofs/examples for:
 - a typed harness-case layer showing the canonical exact fixture corpus can now
   be re-packaged per fixture into coherent harness-facing bundles without
   introducing IO or loosening the typed artifact/probe/comparison boundary
+- a typed verdict/report layer showing those exact comparison outcomes can now
+  be summarized for harness-facing consumption while preserving typed labels,
+  targets, counts, and stable fixture references
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
 - bridges showing the exposed summary invariants are backed by `LocalSound`
