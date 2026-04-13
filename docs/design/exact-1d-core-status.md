@@ -95,6 +95,8 @@ The implemented exact fragment currently includes:
 - a typed exact interchange boundary that packages fixture/export identifiers with
   structured expectation / probe-plan / observation / comparison payloads for a
   future external harness, still without doing any IO yet
+- a deterministic total text projection over those exact interchange payloads,
+  keeping stringly output confined to the final outer boundary
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -158,6 +160,9 @@ The current Lean development already contains proofs/examples for:
 - a typed interchange layer showing fixture/export identifiers, generated-class
   labels, selectors, counts, and exact-match/mismatch comparison outcomes all
   survive projection to a future harness-facing boundary
+- a total outer-boundary text projection layer showing those typed interchange
+  payloads can now be rendered for harness consumption without making strings
+  canonical inside the typed pipeline
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
 - bridges showing the exposed summary invariants are backed by `LocalSound`

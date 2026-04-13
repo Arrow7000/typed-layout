@@ -110,6 +110,10 @@ boundary instead of dropping immediately to loose string inspection. On top of
 that, the exact stack now has a small interchange boundary that packages those
 payloads together with stable fixture/export identifiers and outer-boundary
 selector/file text, still without introducing IO or a concrete browser harness.
+That interchange layer now also has a deterministic total text projection over
+fixture refs, expectation/probe/observation/comparison payloads, and full
+bundles, so a future external harness can consume stable string output while the
+typed interchange structures remain canonical.
 
 ## 7. Likely next backend questions
 

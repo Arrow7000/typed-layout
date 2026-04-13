@@ -16,4 +16,5 @@ import TypedLayout.Backend.ExactCssProbeObservation
 import TypedLayout.Backend.ExactCssFixtures
 import TypedLayout.Backend.ExactCssManifest
 import TypedLayout.Backend.ExactCssInterchange
+import TypedLayout.Backend.ExactCssInterchangeText
 import TypedLayout.Backend.ExactCssExamples
