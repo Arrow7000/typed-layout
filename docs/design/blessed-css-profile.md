@@ -132,7 +132,10 @@ without introducing IO or browser automation. That protocol boundary now also ha
 deterministic outer-boundary text renderers for requests/responses/handoffs plus
 a simple canonical run-transcript rendering, so the future harness-facing edge
 can consume stable transcript text while the typed protocol/run structures remain
-canonical.
+canonical. On top of that, the exact stack now also derives a typed browser task
+plan from those exact requests/cases, naming one page-load task plus ordered
+generated-selector probe tasks and typed box/style collection slices for a future
+runner, still without implementing the runner itself.
 
 ## 7. Likely next backend questions
 
