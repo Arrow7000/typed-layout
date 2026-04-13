@@ -128,7 +128,11 @@ browser execution. The next small harness-facing step now exists too: a typed
 request/response protocol layer that re-expresses one exact harness case as a
 coherent handoff, with rendered-page + expectation/probe-plan request data on the
 request side and observation/comparison/report data on the response side, still
-without introducing IO or browser automation.
+without introducing IO or browser automation. That protocol boundary now also has
+deterministic outer-boundary text renderers for requests/responses/handoffs plus
+a simple canonical run-transcript rendering, so the future harness-facing edge
+can consume stable transcript text while the typed protocol/run structures remain
+canonical.
 
 ## 7. Likely next backend questions
 

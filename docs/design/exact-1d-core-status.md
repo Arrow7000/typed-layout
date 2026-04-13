@@ -113,6 +113,9 @@ The implemented exact fragment currently includes:
   request/response handoff, with typed fixture/rendered-page/expectation/
   probe-plan request data and typed observation/comparison/report response data,
   plus small coherence invariants for case/run-derived handoffs
+- a deterministic outer-boundary text projection over exact harness protocol
+  requests/responses/handoffs, plus a simple canonical run-transcript rendering
+  over the pure corpus/run layer
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -192,6 +195,9 @@ The current Lean development already contains proofs/examples for:
   be lifted again into coherent request/response handoffs, keeping fixture ids,
   probe labels, counts, guarantees, and verdict/comparison alignment typed ahead
   of any future external harness boundary
+- a harness-text projection layer showing those typed protocol values and the
+  canonical baseline run can now be rendered as deterministic transcript text
+  while strings remain confined to the final outer boundary
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
 - bridges showing the exposed summary invariants are backed by `LocalSound`

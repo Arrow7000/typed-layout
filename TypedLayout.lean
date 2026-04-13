@@ -21,4 +21,5 @@ import TypedLayout.Backend.ExactCssHarnessCase
 import TypedLayout.Backend.ExactCssVerdict
 import TypedLayout.Backend.ExactCssHarnessRun
 import TypedLayout.Backend.ExactCssHarnessProtocol
+import TypedLayout.Backend.ExactCssHarnessText
 import TypedLayout.Backend.ExactCssExamples
