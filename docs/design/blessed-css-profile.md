@@ -120,7 +120,11 @@ seed baseline observation/comparison data, and interchange/text projections into
 one pure harness-facing value. The exact stack now also derives a typed
 verdict/report layer over those exact comparison results, summarizing exact
 match vs mismatch, count totals, target-level issues, and stable fixture linkage
-without collapsing back to plain strings.
+without collapsing back to plain strings. On top of that, the exact stack now
+also exposes a typed run/corpus layer that regroups the canonical harness cases
+into an ordered pure corpus plus a derived baseline run, keeping fixture-linked
+case reports, verdict lists, and small run summaries typed ahead of any future
+browser execution.
 
 ## 7. Likely next backend questions
 

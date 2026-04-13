@@ -22,6 +22,7 @@ This note records what the current Lean core actually covers right now.
 - `TypedLayout/Backend/ExactCssFixtures.lean`
 - `TypedLayout/Backend/ExactCssManifest.lean`
 - `TypedLayout/Backend/ExactCssHarnessCase.lean`
+- `TypedLayout/Backend/ExactCssHarnessRun.lean`
 - `TypedLayout/Backend/ExactCssExamples.lean`
 
 ## Current implemented fragment
@@ -105,6 +106,9 @@ The implemented exact fragment currently includes:
 - a typed verdict/report layer that summarizes exact comparison results into
   exact-match/mismatch outcomes, count summaries, typed target issues, and
   fixture-linked harness-facing reports
+- a typed exact harness corpus/run layer that groups canonical harness cases into
+  a pure ordered corpus plus a derived baseline run with case-aligned reports,
+  verdicts, and small run/corpus summaries
 - a total evaluator producing geometry trees
 
 ## Current proved/exampled facts
@@ -177,6 +181,9 @@ The current Lean development already contains proofs/examples for:
 - a typed verdict/report layer showing those exact comparison outcomes can now
   be summarized for harness-facing consumption while preserving typed labels,
   targets, counts, and stable fixture references
+- a typed exact harness corpus/run layer showing the canonical case corpus can
+  now be regrouped into a baseline pure run with stable fixture ids, exact-match
+  verdict summaries, and zero-issue baseline reports for the current corpus
 - exact-to-bounded embeddings for `ExactExtent`, plus basic containment and
   compatibility lemmas over 1D/2D bounded ranges
 - bridges showing the exposed summary invariants are backed by `LocalSound`
