@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/TypedLayout.Core/TypedLayout.Core.fsproj" />
+  <Project Path="src/TypedLayout.Poc/TypedLayout.Poc.fsproj" />
+  <Project Path="tests/TypedLayout.Core.Tests/TypedLayout.Core.Tests.fsproj" />
+</Solution>

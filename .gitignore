@@ -6,6 +6,11 @@
 build/
 .cache/
 
+# .NET / F# build artifacts
+bin/
+obj/
+.ionide/
+
 # Editor noise
 .vscode/
 .idea/
