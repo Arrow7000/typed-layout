@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Typed Layout Playground</title>
+  <link rel="stylesheet" href="/site.css">
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">Semantic POC</p>
+      <h1>Typed Layout</h1>
+      <p>Change the source, then hover or focus an inferred identifier.</p>
+    </header>
+
+    <section class="workspace">
+      <div class="editor-panel">
+        <div class="panel-heading">
+          <h2>Source</h2>
+          <button id="analyze" type="button">Check</button>
+        </div>
+        <textarea id="source" spellcheck="false" aria-label="Typed Layout source"></textarea>
+        <pre id="diagnostic" role="status"></pre>
+      </div>
+
+      <div class="types-panel">
+        <h2>Inferred identifiers</h2>
+        <p class="hint">Hover or focus a name to inspect its layout type.</p>
+        <div id="bindings"></div>
+      </div>
+    </section>
+  </main>
+  <script src="/site.js"></script>
+</body>
+</html>

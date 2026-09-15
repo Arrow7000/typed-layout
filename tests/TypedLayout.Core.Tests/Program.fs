@@ -1,4 +1,5 @@
 open TypedLayout
+open TypedLayout.Language
 
 let px = Px.create
 
@@ -68,6 +69,36 @@ match overflowResult with
 | Error(TypeError.Overflow overflow) ->
     equal "overflow required width" (px 200) overflow.Required
     equal "overflow available width" (px 180) overflow.Available
+
+let languageSource =
+    """viewport 500px 600px
+child = div [ display block, width 100px, height 40px, flex-shrink 0 ] []
+main = div [ display flex, width auto, gap 12px ] [ child, child ]
+"""
+
+match Compiler.analyze languageSource with
+| Error diagnostic ->
+    fail $"standalone source should analyze: {SourceText.formatDiagnostic languageSource diagnostic}"
+| Ok analysis ->
+    equal "source root uses viewport width" (px 500) analysis.Root.UsedSize.Width
+    equal "source root accounts for child widths and gap" (px 212) analysis.Root.ContentRequirements.Width
+
+    match Compiler.tryFindBinding "main" analysis with
+    | None -> fail "main should have a hover type"
+    | Some mainBinding ->
+        if not (mainBinding.HoverText.Contains("used-width = 500px")) then
+            fail "main hover should contain its used width"
+
+let unknownReferenceSource =
+    """viewport 500px 600px
+main = div [ display flex ] [ missing ]
+"""
+
+match Compiler.analyze unknownReferenceSource with
+| Ok _ -> fail "unknown binding should be rejected"
+| Error diagnostic when not (diagnostic.Message.Contains("Unknown element binding 'missing'")) ->
+    fail $"unexpected unknown-binding diagnostic: {diagnostic.Message}"
+| Error _ -> ()
 
 if System.Environment.ExitCode = 0 then
     printfn "All TypedLayout.Core POC tests passed."

@@ -44,11 +44,56 @@ dotnet run --project tests/TypedLayout.Core.Tests
 dotnet run --project src/TypedLayout.Poc
 ```
 
+## Try the standalone language
+
+Check the included program or inspect one inferred identifier:
+
+```sh
+dotnet run --project src/TypedLayout.Cli -- check examples/hello.tl
+dotnet run --project src/TypedLayout.Cli -- type examples/hello.tl main
+```
+
+Start the local playground, then open the printed URL:
+
+```sh
+dotnet run --project src/TypedLayout.Cli -- serve
+```
+
+The playground contains a source editor and hover/focus views of every reachable
+named element's inferred layout type. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> +
+<kbd>Enter</kbd> to check after editing.
+
+The provisional POC syntax looks like:
+
+```elm
+viewport 500px 600px
+
+child =
+    div
+        [ display block
+        , width 100px
+        , height 40px
+        , flex-shrink 0
+        ]
+        []
+
+main =
+    div
+        [ display flex
+        , gap 12px
+        ]
+        [ child, child ]
+```
+
+Whitespace is insignificant, `--` begins a line comment, and `main` is the
+application root. The syntax is intentionally small and revisable.
+
 See:
 
 - `docs/vision/PROJECT_VISION.md`
 - `docs/design/TYPE_SYSTEM_AND_ENVIRONMENTS.md`
 - `docs/plans/2026-09-15-fsharp-poc.md`
+- `docs/plans/2026-09-15-standalone-language-spike.md`
 
 ## Repository history
 

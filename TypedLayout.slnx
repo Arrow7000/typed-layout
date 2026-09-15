@@ -1,5 +1,7 @@
 <Solution>
   <Project Path="src/TypedLayout.Core/TypedLayout.Core.fsproj" />
+  <Project Path="src/TypedLayout.Language/TypedLayout.Language.fsproj" />
+  <Project Path="src/TypedLayout.Cli/TypedLayout.Cli.fsproj" />
   <Project Path="src/TypedLayout.Poc/TypedLayout.Poc.fsproj" />
   <Project Path="tests/TypedLayout.Core.Tests/TypedLayout.Core.Tests.fsproj" />
 </Solution>

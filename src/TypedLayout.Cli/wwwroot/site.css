@@ -1,0 +1,83 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  background: #101418;
+  color: #e8edf2;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+
+main {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0;
+}
+
+header { margin-bottom: 28px; }
+h1 { margin: 4px 0 8px; font-size: clamp(2rem, 5vw, 4rem); }
+h2 { margin: 0; font-size: 1rem; }
+p { color: #9eabb8; }
+.eyebrow { margin: 0; color: #6ee7b7; font: 700 0.75rem ui-monospace, monospace; text-transform: uppercase; letter-spacing: .16em; }
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
+  gap: 18px;
+}
+
+.editor-panel, .types-panel {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #2b3540;
+  border-radius: 12px;
+  background: #171d23;
+}
+
+.panel-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+
+button {
+  border: 1px solid #4d665e;
+  border-radius: 7px;
+  padding: 7px 12px;
+  background: #213a32;
+  color: #d8fff0;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:hover, button:focus-visible { border-color: #6ee7b7; outline: none; }
+
+textarea {
+  width: 100%;
+  min-height: 440px;
+  resize: vertical;
+  border: 0;
+  border-radius: 8px;
+  padding: 16px;
+  background: #0d1115;
+  color: #dce7ef;
+  font: 14px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+  tab-size: 4;
+}
+
+#diagnostic { min-height: 1.5em; margin-bottom: 0; color: #ff9d9d; white-space: pre-wrap; }
+.hint { margin: 8px 0 18px; font-size: .9rem; }
+.binding { position: relative; margin-bottom: 10px; }
+.binding > button { width: 100%; text-align: left; background: #11171c; }
+.binding pre {
+  display: none;
+  overflow: auto;
+  margin: 8px 0 16px;
+  padding: 12px;
+  border-left: 2px solid #6ee7b7;
+  background: #0d1115;
+  color: #cfe9df;
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.binding:hover pre, .binding:focus-within pre { display: block; }
+
+@media (max-width: 760px) {
+  main { width: min(100% - 20px, 720px); padding: 24px 0; }
+  .workspace { grid-template-columns: 1fr; }
+}

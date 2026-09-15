@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/TypedLayout.Core/TypedLayout.Core.fsproj" />
+    <ProjectReference Include="../../src/TypedLayout.Language/TypedLayout.Language.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.fs" />
